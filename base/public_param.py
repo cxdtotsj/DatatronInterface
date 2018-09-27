@@ -1,8 +1,13 @@
 '''
-1.获取测试用户、专家的 user_id 、 token
+1.获取超级管理员token
 '''
+import sys
+import os
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
-from base.baseMethod import BaseMethod
+from base.base_method import BaseMethod
 from util.operation_db import OperationDB
 
 
@@ -11,50 +16,42 @@ class PublicParam:
     def __init__(self):
         self.run_method = BaseMethod()
         self.opera_db = OperationDB()
-        self.token = self.get_token()[0]
-        self.user_id = self.get_token()[1]
+        self.token = self.get_token()
 
-    # 获取测试用户的 user_id，token
+    # 获取超级管理员(1 << 30) token
     def get_token(self):
-        api = "/api/v1/user/login"
-        data = {"mobile": 18321829313, "password": "Password01!"}
+        api = "/user/login"
+        data = {"email": "admin@admin", 
+                "password": "abc123"}
         res = self.run_method.post(api, data)
+        res_dict = res.json()
         if res.status_code == 200:
-            res_dict = res.json()
-            try:
-                self.token = res_dict["data"]["token"]
-                self.user_id = res_dict["data"]["user_id"]
-                return self.token, self.user_id
-            except BaseException:
-                print("用户名或验证码错误")
-        else:
-            print("服务器登陆失败")
-
-    # 获取专家的user_id，token
-    def get_expert_info(self):
-        api = "/api/v1/user/login"
-        data = {"mobile": 18317026527, "password": "Password01!"}
-        res = self.run_method.post(api, data)
-        if res.status_code == 200:
-            res_dict = res.json()
-            try:
-                self.e_token = res_dict["data"]["token"]
-                self.e_id = res_dict["data"]["user_id"]
-                return self.e_token, self.e_id
-            except BaseException:
-                print("用户名或验证码错误")
-        else:
-            print("服务器登陆失败")
-
-    # 获取用户id
-    def get_id(self):
-        sql = '''select id from zyt_user where user_id = '{}';'''.format(self.user_id)
-        id = self.opera_db.get_fetchone(sql)["id"]
-        return id
+            token = res_dict["token"]
+            return token
+        elif res.status_code == 400:
+            err_code = res_dict["code"]
+            if err_code == 1401:
+                print("密码不匹配")
+            elif err_code == 1404:
+                print("用户不存在")
+            elif err_code == 1426:
+                print("密码需修改")
+    
+    def get_base_header(self):
+        return {"Authorization":self.token}
+         
+    def get_code(self, res):
+        '''获取错误code'''
+        res_dict = res.json()
+        result_code = res_dict["code"]
+        return result_code 
 
 
 if __name__ == "__main__":
     import time
     basedata = PublicParam()
-    eid = basedata.get_id()
-    print(eid)
+    token = basedata.get_token()
+    print(token)
+    time.sleep(3)
+    header = basedata.get_base_header()
+    print(header)

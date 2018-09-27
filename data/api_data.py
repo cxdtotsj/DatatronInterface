@@ -3,26 +3,16 @@
 """
 import datetime
 import random
-
-
-class QaApiData:
-
-    # 专家提问接口 /api/v1/qa/qsubmit
-    qa_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    qa_title = "这是问题题目 -- %s" % qa_time
-    qa_desc = "这是问题描述 -- %s" % qa_time
-    qa_img_one = ["/1536116758846885506?imageView2/2/w/212/h/136/q/100"]
-    qa_img_four = ["/1536116758846885506?imageView2/2/w/212/h/136/q/100",
-                  "/1536116758846885506?imageView2/2/w/212/h/136/q/100",
-                  "/1536116758846885506?imageView2/2/w/212/h/136/q/100",
-                  "/1536116758846885506?imageView2/2/w/212/h/136/q/100"]
-    qa_headers = {"content-type": "application/json"}
-
-    # 专家回答接口 /api/v1/qa/asubmit
-    answer_content = "这是问题答案 -- %s" % qa_time
-
+from base.public_param import PublicParam
 
 class UserApiData:
+
+    #  /user/create
+    user_num = random.randint(1,50)
+    user_name = "auto_test{}".format(user_num)
+
+
+class ApiData:
 
     # headers
     headers = {"content-type": "application/json"}

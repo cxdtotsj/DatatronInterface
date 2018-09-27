@@ -2,7 +2,7 @@
 import base.setting
 
 
-class API:
+class GetUrl:
 
     def proto_api_url(self, grpc_data=None, proto_method=None):
         format_url = base.setting.grpc_format_url
@@ -35,7 +35,7 @@ class API:
 
 
 if __name__ == "__main__":
-    get_url =API()
+    get_url =GetUrl()
     api = "v1/course/hour"
     url = get_url.http_api_url(api)
     print(url)

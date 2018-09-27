@@ -2,7 +2,7 @@ import os
 
 
 # 项目名称
-ENV = "ZYT Testing"
+ENV = "Datatron_Dev Testing"
 
 # GRPC参数和方法名
 gprc_base_url = "{} -plaintext -d '%s' -import-path {} -proto %s"
@@ -16,12 +16,7 @@ grpc_format_url = gprc_base_url.format(grpc, proto_file)
 
 
 # HTTP域名，环境变量中存在key
-if "key" in os.environ:
-    print("Using env url")
-    http_base_url = os.environ.get("key")
-else:
-    print("Using default url")
-    http_base_url = "https://zyt-dev.arctron.cn"
+http_base_url = os.environ.get("base_url") or "https://dt-dev.arctron.cn/api"
 
 
 # 数据库信息

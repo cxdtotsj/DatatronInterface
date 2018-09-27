@@ -1,5 +1,5 @@
 '''
-注册
+
 '''
 
 import sys
@@ -7,12 +7,12 @@ import os
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
-from base.baseMethod import BaseMethod
+from base.base_method import BaseMethod
 from util.operation_db import OperationDB
 import json
 
 
-class BeforeTest:
+class InitTest:
     def __init__(self):
         self.run_method = BaseMethod()
         self.opera_db = OperationDB()
@@ -41,5 +41,5 @@ class BeforeTest:
 
 
 if __name__ == '__main__':
-    before_test = BeforeTest()
+    before_test = InitTest()
     before_test.user_register()
