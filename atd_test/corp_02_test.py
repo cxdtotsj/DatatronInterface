@@ -37,7 +37,7 @@ class TestCorp(unittest.TestCase, Corp):
         '''case02_01:用户添加到组--无用户ID'''
         pass
     
-    def test02_02_corp_user_add_errorUserId(self):
+    def test02_02_corp_user_add_errUserId(self):
         '''case02_02:用户添加到组--错误的用户ID'''
         pass
     
@@ -45,7 +45,7 @@ class TestCorp(unittest.TestCase, Corp):
         '''case02_03:用户添加到组--无组ID'''
         pass
     
-    def test02_04_corp_user_add_super_errorCorpId(self):
+    def test02_04_corp_user_add_super_errCorpId(self):
         '''case02_04:用户添加到组--错误的组ID'''
         pass
     
@@ -90,53 +90,53 @@ class TestCorp(unittest.TestCase, Corp):
         '''case02_14:用户添加到组--用户在该组但无管理员权限'''
         pass
     
-
-    # 超管用例 01 ~ 07
-    def test03_01_corp_user_del_noUserId(self):
-        '''case03_01:用户从组删除--无用户ID'''
+    def test03_01_corp_user_list_noPage(self):
+        '''case03_01:组内用户列表--未传page'''
         pass
     
-    def test03_02_corp_user_del_errUserId(self):
-        '''case03_02:用户从组删除--错误的用户ID'''
+    def test03_02_corp_user_list_errPageType(self):
+        '''case03_02:组内用户列表--错误的page参数'''
         pass
 
-    def test03_03_corp_user_del_super_noCorpId(self):
-        '''case03_03:用户从组删除--超管无组ID'''
+    def test03_03_corp_user_list_noSize(self):
+        '''case03_03:组内用户列表--未传size'''
         pass
     
-    def test03_04_corp_user_del_super_errorCorpId(self):
-        '''case03_04:用户从组删除--错误的组ID'''
+    def test03_04_corp_user_list_errSizeType(self):
+        '''case03_04:组内用户列表--错误的size参数'''
+        pass
+    
+    def test03_05_corp_user_list_super_noCorpId(self):
+        '''case03_05:组内用户列表--超管无组ID'''
+        pass
+    
+    def test03_06_corp_user_list_super_errCorpId(self):
+        '''case03_06:组内用户列表--错误的组ID'''
+        pass
+    
+    def test03_07_corp_user_list_noToken(self):
+        '''case03_07:组内用户列表--无token'''
+        pass
+    
+    def test03_08_corp_user_list_super_success(self):
+        '''case03_08:组内用户列表--查看成功'''
+        pass
+    
+    def test03_09_corp_user_list_noCorpId(self):
+        '''case03_09:组内用户列表--未传组ID(管理员只在一个组)'''
         pass
 
-    def test03_05_corp_user_del_noToken(self):
-        '''case03_05:用户从组删除--无token'''
-        pass
-    
-    def test03_06_corp_user_del_super_success(self):
-        '''case03_06:用户从组删除--删除用户成功'''
-        pass
-    
-    def test03_07_corp_user_del_repeat(self):
-        '''case03_07:用户从组删除--再次删除用户'''
-        pass
-    
-    # 组管理员账号 08 ~ 10
-    def test03_08_corp_user_del_noCorpId(self):
-        '''case03_08:用户从组删除--未传组ID(管理员同时在两个组)'''
-        pass
-    
-    def test03_09_corp_user_del_haveCorpId(self):
-        '''case03_09:用户从组删除--传入组ID(有管理员权限)'''
-        pass
-    
-    def test03_10_corp_user_del_otherCorpId(self):
-        '''cas3_10:用户从组删除--传入其他组ID(无管理员权限)'''
-        pass
-    
-    def test03_11_corp_user_del_noAuth(self):
-        '''case03_11:用户从组删除--用户在该组但无管理员权限'''
+    def test03_10_corp_user_list_noCorpId(self):
+        '''case03_10:组内用户列表--未传组ID(管理员同时在两个组)'''
         pass    
+    
+    def test03_11_corp_user_list_haveCorpId(self):
+        '''case03_11:组内用户列表--传入组ID(管理员同时在两个组)'''
+        pass  
 
+    def test03_12_corp_user_list_otherCorpId(self):
+        '''cas3_12:组内用户列表--传入其他组ID(无管理员权限)'''
+        pass
 
     def test04_01_corp_list_noPage(self):
         '''case04_01:组列表--未传page'''
@@ -161,3 +161,52 @@ class TestCorp(unittest.TestCase, Corp):
     def test04_06_corp_list_common_success(self):
         '''case04_06:组列表--普通用户查询成功'''
         pass
+    
+
+    # 超管用例 01 ~ 07
+    def test05_01_corp_user_del_noUserId(self):
+        '''case05_01:用户从组删除--无用户ID'''
+        pass
+    
+    def test05_02_corp_user_del_errUserId(self):
+        '''case05_02:用户从组删除--错误的用户ID'''
+        pass
+
+    def test05_03_corp_user_del_super_noCorpId(self):
+        '''case05_03:用户从组删除--超管无组ID'''
+        pass
+    
+    def test05_04_corp_user_del_super_errCorpId(self):
+        '''case05_04:用户从组删除--错误的组ID'''
+        pass
+
+    def test05_05_corp_user_del_noToken(self):
+        '''case05_05:用户从组删除--无token'''
+        pass
+    
+    def test05_06_corp_user_del_super_success(self):
+        '''case05_06:用户从组删除--删除用户成功'''
+        pass
+    
+    def test05_07_corp_user_del_repeat(self):
+        '''case05_07:用户从组删除--再次删除用户'''
+        pass
+    
+    # 组管理员账号 08 ~ 10
+    def test05_08_corp_user_del_noCorpId(self):
+        '''case05_08:用户从组删除--未传组ID(管理员同时在两个组)'''
+        pass
+    
+    def test05_09_corp_user_del_haveCorpId(self):
+        '''case05_09:用户从组删除--传入组ID(有管理员权限)'''
+        pass
+    
+    def test05_10_corp_user_del_otherCorpId(self):
+        '''cas3_10:用户从组删除--传入其他组ID(无管理员权限)'''
+        pass
+    
+    def test05_11_corp_user_del_noAuth(self):
+        '''case05_11:用户从组删除--用户在该组但无管理员权限'''
+        pass    
+
+
