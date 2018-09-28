@@ -33,32 +33,14 @@ class BaseMethod:
         cookies:
         headers:
         '''
-        res = None
         url = self.get_url.http_api_url(api)
-        if cookies is not None:
-            if headers is not None:
-                if data is not None:
-                    res = requests.post(url=url, data=data,
-                                        cookies=cookies, headers=headers)
-                elif json is not None:
-                    res = requests.post(url=url, json=json,
-                                        cookies=cookies, headers=headers)
-                else:
-                    res = requests.post(
-                        url=url, cookies=cookies, headers=headers)
-            else:
-                res = requests.post(url=url, data=data, cookies=cookies)
+        if data is not None:
+            return requests.post(url=url, data=data,cookies=cookies, headers=headers)
+        elif json is not None:
+            return requests.post(url=url, json=json, cookies=cookies, headers=headers)
         else:
-            if headers is not None:
-                if data is not None:
-                    res = requests.post(url=url, data=data, headers=headers)
-                elif json is not None:
-                    res = requests.post(url=url, json=json, headers=headers)
-                else:
-                    res = requests.post(url=url, headers=headers)
-            else:
-                res = requests.post(url=url, data=data)
-        return res
+            return requests.post(url=url,cookies=cookies, headers=headers)
+
 
     def get(self, api, data=None, json=None, cookies=None, headers=None):
         '''
@@ -68,32 +50,13 @@ class BaseMethod:
         cookies:
         headers:
         '''
-        res = None
         url = self.get_url.http_api_url(api)
-        if cookies is not None:
-            if headers is not None:
-                if data is not None:
-                    res = requests.get(url=url, params=data,
-                                       cookies=cookies, headers=headers)
-                elif json is not None:
-                    res = requests.get(url=url, json=json,
-                                       cookies=cookies, headers=headers)
-                else:
-                    res = requests.get(
-                        url=url, cookies=cookies, headers=headers)
-            else:
-                res = requests.get(url=url, params=data, cookies=cookies)
+        if data is not None:
+            return requests.get(url=url, params=data,cookies=cookies, headers=headers)
+        elif json is not None:
+            return requests.get(url=url, json=json, cookies=cookies, headers=headers)
         else:
-            if headers is not None:
-                if data is not None:
-                    res = requests.get(url=url, params=data, headers=headers)
-                elif json is not None:
-                    res = requests.get(url=url, json=json, headers=headers)
-                else:
-                    res = requests.get(url=url, headers=headers)
-            else:
-                res = requests.get(url=url, params=data)
-        return res
+            return requests.get(url=url,cookies=cookies, headers=headers)
 
 
 if __name__ == "__main__":

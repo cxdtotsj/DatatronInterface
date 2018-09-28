@@ -8,8 +8,7 @@ class OperetionJson:
         curPath = os.path.abspath(os.path.dirname(__file__))
         rootPath = os.path.split(curPath)[0]
         if file_path is None:
-            # self.file_path = r'D:\Testfan\ZytInterface\dataconfig\zyt_data.json'
-            self.file_path = os.path.join(rootPath,'dataconfig','zyt_data.json')
+            self.file_path = os.path.join(rootPath,'dataconfig','datatron_dev.json')
         else:
             self.file_path = file_path
         self.data = self.read_data()
@@ -34,13 +33,12 @@ class OperetionJson:
     def check_json_value(self, depend_key, depend_vaule):
         json_data = self.data
         json_data[depend_key] = depend_vaule
-        self.write_data(json_data)
+        try:
+            self.write_data(json_data)
+        except TypeError:
+            print("写入json文件失败")
 
 
 if __name__ == '__main__':
-    import os
-    curPath = os.path.abspath(os.path.dirname(__file__))
-    rootPath = os.path.split(curPath)[0]
-    json_path = os.path.join(rootPath,'dataconfig','zyt_data.json')
-    print(rootPath)
-    print(json_path)
+    json_o = OperetionJson()
+    json_o.check_json_value("test",{"user_id":123,"token":234})
