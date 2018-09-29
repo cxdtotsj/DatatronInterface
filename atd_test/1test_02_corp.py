@@ -1,4 +1,4 @@
-'''用户类接口'''
+'''组织类接口'''
 import sys
 import os
 sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,9 +19,7 @@ class TestCorp(unittest.TestCase, Corp):
     
     def test_01_01_corp_create_noName(self):
         '''case01_01:创建组--name为空'''
-
-        api = '/corp/create'
-        data = {"name":None}
+        pass
     
     def test01_02_corp_create_noToken(self):
         '''case01_02:创建组--无token'''
@@ -31,6 +29,10 @@ class TestCorp(unittest.TestCase, Corp):
         '''case01_03:创建组--未授权'''
         pass
     
+    def test01_04_corp_create_success(self):
+        '''case01_03:创建组--标准输入'''
+        pass
+
 
     # 超管用例 01 ~ 07
     def test02_01_corp_user_add_noUserId(self):
@@ -63,11 +65,11 @@ class TestCorp(unittest.TestCase, Corp):
 
     # 组管理员账号 08 ~ 13
     def test02_08_corp_user_add_noCorpId(self):
-        '''case02_08:用户添加到组--未传组ID(管理员同时在两个组)'''
+        '''case02_08:用户添加到组--未传组ID(暂不考虑管理员同时在两个组)'''
         pass
     
     def test02_09_corp_user_add_havaCorpId(self):
-        '''case02_09:用户添加到组--传入组ID(有管理员权限)'''
+        '''case02_09:用户添加到组--传入组ID(管理员所在组)'''
         pass
     
     def test02_10_corp_user_add_ohterCorpId(self):
@@ -90,6 +92,7 @@ class TestCorp(unittest.TestCase, Corp):
         '''case02_14:用户添加到组--用户在该组但无管理员权限'''
         pass
     
+
     def test03_01_corp_user_list_noPage(self):
         '''case03_01:组内用户列表--未传page'''
         pass
@@ -127,16 +130,17 @@ class TestCorp(unittest.TestCase, Corp):
         pass
 
     def test03_10_corp_user_list_noCorpId(self):
-        '''case03_10:组内用户列表--未传组ID(管理员同时在两个组)'''
+        '''case03_10:组内用户列表--未传组ID(暂不考虑管理员同时在两个组)'''
         pass    
     
     def test03_11_corp_user_list_haveCorpId(self):
-        '''case03_11:组内用户列表--传入组ID(管理员同时在两个组)'''
+        '''case03_11:组内用户列表--传入组ID(管理员所在组)'''
         pass  
 
     def test03_12_corp_user_list_otherCorpId(self):
         '''cas3_12:组内用户列表--传入其他组ID(无管理员权限)'''
         pass
+
 
     def test04_01_corp_list_noPage(self):
         '''case04_01:组列表--未传page'''
@@ -193,16 +197,16 @@ class TestCorp(unittest.TestCase, Corp):
         pass
     
     # 组管理员账号 08 ~ 10
-    def test05_08_corp_user_del_noCorpId(self):
-        '''case05_08:用户从组删除--未传组ID(管理员同时在两个组)'''
+    def test05_08_corp_user_del_otherCorpId(self):
+        '''case05_08:用户从组删除--传入其他组ID(无管理员权限)'''
+        pass
+
+    def test05_09_corp_user_del_noCorpId(self):
+        '''case05_09:用户从组删除--未传组ID'''
         pass
     
-    def test05_09_corp_user_del_haveCorpId(self):
-        '''case05_09:用户从组删除--传入组ID(有管理员权限)'''
-        pass
-    
-    def test05_10_corp_user_del_otherCorpId(self):
-        '''cas3_10:用户从组删除--传入其他组ID(无管理员权限)'''
+    def test05_10_corp_user_del_haveCorpId(self):
+        '''case05_10:用户从组删除--传入组ID(管理员在其他组的ID，暂不考虑)'''
         pass
     
     def test05_11_corp_user_del_noAuth(self):

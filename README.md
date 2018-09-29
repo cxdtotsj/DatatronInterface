@@ -4,4 +4,4 @@
 # 单元测试调试命令
 - 类
 
-    `python -m unittest -v user_01_test.TestUser`
+    `python -m unittest -v test_01_user.TestUser`
