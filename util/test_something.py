@@ -85,53 +85,11 @@ import os
 #
 # print_num()
 
-    # 获取测试用户的 user_id，token
-    def get_token(self):
-        api = "/api/v1/user/login"
-        data = {"mobile": 18321829313, "password": "Password01!"}
-        res = self.run_method.post(api, data)
-        if res.status_code == 200:
-            res_dict = res.json()
-            try:
-                self.token = res_dict["data"]["token"]
-                self.user_id = res_dict["data"]["user_id"]
-                return self.token, self.user_id
-            except BaseException:
-                print("用户名或验证码错误")
-        else:
-            print("服务器登陆失败")
 
-
-def comm_login(mobile,passwd):
-    def actual_decorator(decorated):
-        def inner(*args,**kws):
-            api = "/api/v1/user/login"
-            data = {"mobile": mobile, "password": passwd}
-            res = run_method.post(api, data)
-            token = res_dict["data"]["token"]
-            user_id = res_dict["data"]["user_id"]
-
-
-
-
-
-
-def test06_01_user_feedback_noContent(self):
-    """case06-01 : 用户反馈 ;
-        未填写反馈内容 """
-    api = "/api/v1/user/feedback"
-    data = {"user_id": self.user_id,
-            "token": self.token}
-
-    res = self.run_method.post(api, data)
-
-    self.assertEqual(res.status_code, 200, "HTTP状态码不为200")
-    self.assertEqual(
-        self.run_method.get_result(res),
-        "fail", res.json())
-    self.assertEqual(
-        self.run_method.get_errno(res),
-        "-50030",
-        "返回的errno不正确")
-
-    
+import requests    
+url = "https://dt-dev.arctron.cn/api/user/login"
+data = {"email": "admin@admin", 
+        "password": "abc123"}
+r = requests.post(url,data)
+print(r.text)
+print("X-Request-Id : %s" %r.headers["X-Request-Id"]) 
