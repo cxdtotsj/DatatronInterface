@@ -86,10 +86,10 @@ import os
 # print_num()
 
 
-import requests    
-url = "https://dt-dev.arctron.cn/api/user/login"
-data = {"email": "admin@admin", 
-        "password": "abc123"}
-r = requests.post(url,data)
-print(r.text)
-print("X-Request-Id : %s" %r.headers["X-Request-Id"]) 
+# import requests    
+# url = "https://dt-dev.arctron.cn/api/user/login"
+# data = {"email": "admin@admin", 
+#         "password": "abc123"}
+# r = requests.post(url,data)
+# print(r.text)
+# print("X-Request-Id : %s" %r.headers["X-Request-Id"]) 

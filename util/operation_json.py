@@ -26,7 +26,7 @@ class OperetionJson:
     # 写json
     def write_data(self, data):
         with open(self.file_path, 'w', encoding='utf-8') as fp:
-            fp.write(json.dumps(data))
+            fp.write(json.dumps(data,ensure_ascii=False))
             fp.close()
 
     # 重写json
