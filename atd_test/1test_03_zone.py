@@ -1,4 +1,13 @@
-'''园区类接口'''
+'''
+园区类接口
+
+test01 : /zone/create
+test02 : /zone/get
+test03 : /zone/list
+test04 : /zone/update
+test05 : /zone/del
+
+'''
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -7,6 +16,8 @@ from data.api_data import ZoneApiData as Zone
 from base.base_method import BaseMethod
 from base.public_param import PublicParam
 from util.operation_json import OperetionJson
+from util.operation_assert import OperationAssert
+from util.operation_db import OperationDB
 import unittest
 import json
 
@@ -18,8 +29,10 @@ class TestZone(unittest.TestCase):
         cls.run_method = BaseMethod()
         cls.pub_param = PublicParam()
         cls.super_header = cls.pub_param.get_super_header()
-        cls.corp_header, cls.corp_id = cls.pub_param.get_corp_header()
+        cls.corp_header, cls.corp_id = cls.pub_param.get_corp_user()
         cls.opera_json = OperetionJson()
+        cls.opera_assert = OperationAssert()
+        cls.opera_db = OperationDB()
 
     def test01_01_zone_create_noName(self):
         '''case01_01:创建园区--无园区名称'''
@@ -41,8 +54,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1400, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1400, "状态码返回错误")
 
     def test01_02_zone_create_noBuildNum(self):
         '''case01_02:创建园区--无楼宇数量'''
@@ -64,8 +77,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1400, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1400, "状态码返回错误")
 
     def test01_03_zone_create_noArea(self):
         '''case01_03:创建园区--无面积(默认为0)'''
@@ -87,8 +100,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 200, "状态码返回出错误")
-        self.assertEqual(res_dict["area"], 0, res_dict)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res_dict["area"], 0, "面积默认值返回错误")
 
     def test01_04_zone_create_noLoc(self):
         '''case01_04:创建园区--无地址'''
@@ -105,7 +118,7 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
+        self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res_dict["code"], 1400, res_dict)
 
     def test01_05_zone_create_noCoord(self):
@@ -124,8 +137,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1400, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1400, "状态码返回错误")
 
     def test01_06_zone_create_noExtra(self):
         '''case01_06:创建园区[ZCM]--无附加信息'''
@@ -148,9 +161,9 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 200, "状态码返回出错误")
-        self.assertEqual(res_dict["corpId"], self.corp_id, res_dict)
-    
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res_dict["corpId"], self.corp_id, "组织ID返回错误")
+
         self.opera_json.check_json_value(
             "test01_06_zone_create_noExtra", res_dict["name"])
 
@@ -187,16 +200,16 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 200, "状态码返回出错误")
-        self.assertEqual(res_dict["corpId"], self.corp_id, res_dict)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res_dict["corpId"], self.corp_id, "组织ID返回错误")
 
         self.opera_json.check_json_value("test01_07_zone_create_success", {
                                          "zone_id": res_dict["id"], "data": data})
 
+    # 依赖用例 test01_06_zone_create_noExtra
     def test01_08_zone_create_nameRepeat(self):
         '''case01_08:创建园区[ZCM]--园区名称重复'''
         api = '/zone/create'
-        # 依赖用例 test01_06_zone_create_noExtra
         repeat_name = self.opera_json.get_data("test01_07_zone_create_success")
         data = {
             "name": repeat_name,
@@ -216,8 +229,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1409, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1409, "状态码返回错误")
 
     def test01_09_zone_create_noCorpId(self):
         '''case01_09:创建园区[ZSM]--无CorpID'''
@@ -240,8 +253,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.super_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1400, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1400, "状态码返回错误")
 
     def test01_10_zone_create_corpId(self):
         '''case01_10:创建园区[ZSM]--新增成功(指定CorpID)'''
@@ -265,8 +278,8 @@ class TestZone(unittest.TestCase):
         }
         res = self.run_method.post(api, json=data, headers=self.super_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 200, "状态码返回出错误")
-        self.assertEqual(res_dict["corpId"], self.corp_id, res_dict)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res_dict["corpId"], self.corp_id, "组织ID返回错误")
 
     def test01_11_zone_create_noRole(self):
         '''case01_11:创建园区--普通组织用户新增'''
@@ -290,8 +303,8 @@ class TestZone(unittest.TestCase):
         res = self.run_method.post(
             api, json=data, headers=self.pub_param.common_user(self.corp_id))
         res_dict = res.json()
-        self.assertEqual(res.status_code, 403, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1403, res_dict)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res_dict["code"], 1403, "状态码返回错误")
 
     def test02_01_zone_get_noId(self):
         '''case02_01:获取园区详细信息--无园区ID'''
@@ -299,8 +312,8 @@ class TestZone(unittest.TestCase):
         data = {"id": None}
         res = self.run_method.post(api, data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1404, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1404, "状态码返回错误")
 
     def test02_02_zone_get_otherId(self):
         '''case02_02:获取园区详细信息[ZCM]--其他组织的园区'''
@@ -310,81 +323,231 @@ class TestZone(unittest.TestCase):
         data = {"id": zone_id}
         res = self.run_method.post(api, data, headers=self.corp_header)
         res_dict = res.json()
-        self.assertEqual(res.status_code, 400, "状态码返回出错误")
-        self.assertEqual(res_dict["code"], 1403, res_dict)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res_dict["code"], 1403, "状态码返回错误")
 
+    # 依赖用例 test01_07_zone_create_success
     def test02_03_zone_get_success(self):
         '''case02_03:获取园区详细信息[ZCM]--所在组织的园区'''
         api = "/zone/get"
-        # 依赖用例 test01_07_zone_create_success
-        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
-        zone_data = self.opera_json.get_data("test01_07_zone_create_success")["data"]
-        zone_list = [(k,v) for k,v in zone_data.items()]
-        print(zone_list)
-        print(type(zone_list))
-        #print(zone_data)
+        zone_id = self.opera_json.get_data(
+            "test01_07_zone_create_success")["zone_id"]
+        zone_data = self.opera_json.get_data(
+            "test01_07_zone_create_success")["data"]
         data = {"id": zone_id}
         res = self.run_method.post(api, data, headers=self.corp_header)
-        print("---------------------------------------------------------------")
-        res_list = [(k,v) for k,v in res.json().items()]
-        print(res_list)
-        self.assertEqual(res.status_code, 200, "状态码返回出错误")
-        # self.assertIn(zone_value,res_value)
-        print(zone_list in res_list)
+        self.assertEqual(res.status_code, 200, res.json())
+        # 判断 新增的园区信息 是否返回正确
+        self.opera_assert.is_dict_in(zone_data, res.json())
 
-
+    # 依赖用例 test01_07_zone_create_success
     def test02_04_zone_get_zsm(self):
         '''case02_04:获取园区详细信息[ZSM]'''
-        pass
+        api = "/zone/get"
 
+        zone_id = self.opera_json.get_data(
+            "test01_07_zone_create_success")["zone_id"]
+        zone_data = self.opera_json.get_data(
+            "test01_07_zone_create_success")["data"]
+        data = {"id": zone_id}
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        # 判断 新增的园区信息 是否返回正确
+        self.opera_assert.is_dict_in(zone_data, res.json())
+
+    # 依赖用例 test01_07_zone_create_success
     def test02_05_zone_get_noRole(self):
         '''case02_05:获取园区详细信息--普通组织用户'''
-        pass
+        api = "/zone/get"
+        zone_id = self.opera_json.get_data(
+            "test01_07_zone_create_success")["zone_id"]
+        # 新建普通用户，无管理员权限
+        common_header = self.pub_param.common_user(self.corp_id)
+        data = {"id": zone_id}
+        res = self.run_method.post(api, data, headers=common_header)
+        self.assertEqual(res.status_code, 200, res.json())
 
-    def test02_06_zone_get_noRole(self):
+    def test02_06_zone_get_errZoneId(self):
         '''case02_06:获取园区详细信息--错误的园区ID'''
-        pass
+        api = "/zone/get"
+        data = {"id": 11223344}
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1404, "状态码返回错误")
 
-    def test03_01_zone_list_noPage(self):
-        '''case03_01:园区列表--未传page'''
-        pass
+    def test03_01_zone_list_success(self):
+        '''case03_01:园区列表[ZCM]--查看成功(corp_id)'''
+        api = "/zone/list"
+        data = {"page": 1,
+                "size": 10}
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        # 判断返回的园区是否都为该 corp_id
+        self.opera_assert.is_equal_value(
+            self.corp_id, res.json()["data_list"], "corp_id")
 
-    def test03_02_zone_list_errPageType(self):
-        '''case03_02:园区列表--错误的page参数'''
-        pass
+    def test03_02_zone_list_zsm(self):
+        '''case03_02:园区列表[ZSM]--超级管理员(total数量)'''
+        api = "/zone/list"
+        data = {"page": 1,
+                "size": 10}
+        res = self.run_method.post(api, data, headers=self.super_header)
+        sql = '''select id from zone where status != 3;'''
+        zone_num = self.opera_db.get_effect_row(sql)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.json()["total"],str(zone_num),"返回的zone数量不正确")
 
-    def test03_03_zone_list_noSize(self):
-        '''case03_03:园区列表--未传size'''
-        pass
+    def test03_03_zone_list_noRole(self):
+        '''case03_03:园区列表--组织普通用户'''
+        api = "/zone/list"
+        data = {"page": 1,
+                "size": 10}
+        common_header = self.pub_param.common_user(self.corp_id)
+        res = self.run_method.post(api, data, headers=common_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        # 判断返回的园区是否都为该 corp_id
+        self.opera_assert.is_equal_value(
+            self.corp_id, res.json()["data_list"], "corp_id")
 
-    def test03_04_zone_list_errSizeType(self):
-        '''case03_04:园区列表--错误的size参数'''
-        pass
+    def test03_04_zone_list_errUser(self):
+        '''case03_04:园区列表--非法用户'''
+        api = "/zone/list"
+        data = {"page": 1,
+                "size": 10}
+        res = self.run_method.post(api, data, headers={"Authorization":"abc"})
+        self.assertEqual(res.status_code, 401, res.json())
+        self.assertEqual(res.json()["code"],1401,"状态码返回错误")
 
-    def test03_05_zone_list_success(self):
-        '''case03_05:园区列表[ZCM]--查看成功(total数量)'''
-        pass
+    # 依赖用例 test01_07_zone_create_success
+    def test04_01_zone_update_area(self):
+        '''case04_01:编辑园区[RCM]--更新面积'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        data = self.pub_param.zone_get(zone_id,self.corp_header)
+        data.update(area=50)
+        res = self.run_method.post(api,json=data,headers=self.corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["area"],50,"面积未更新成功")
+        
+    def test04_02_zone_update_buildingNum(self):
+        '''case04_02:编辑园区[RCM]--更新楼宇数'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        data = self.pub_param.zone_get(zone_id,self.corp_header)
+        data.update(building_num=28)
+        res = self.run_method.post(api,json=data,headers=self.corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["building_num"],28,"楼宇数未更新成功")
+    
+    def test04_03_zone_update_coord(self):
+        '''case04_03:编辑园区[RCM]--更新经纬度'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        data = self.pub_param.zone_get(zone_id,self.corp_header)
+        new_coord = {
+                "longitude": 200,
+                "latitude": 200,
+                "altitude": 100
+                }
+        data.update(coord=new_coord)
+        res = self.run_method.post(api,json=data,headers=self.corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["coord"],new_coord,"经纬度未更新成功")
 
-    def test03_06_zone_list_zsm(self):
-        '''case03_06:园区列表[ZSM]--超级管理员(total数量)'''
-        pass
+    def test04_04_zone_update_coord(self):
+        '''case04_04:编辑园区[RCM]--更新附加信息'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        data = self.pub_param.zone_get(zone_id,self.corp_header)
+        new_extra = {
+                "build_corp": "更新建筑单位名称",
+                "build_start_at": "2018-10-10",
+                "construct_corp": "更新规划单位名称",
+                "construct_end_at": "2018-10-10",
+                "design_corp": "更新设计单位名称",
+                "design_end_at": "2018-10-10",
+                "plan_corp": "更新施工单位名称",
+                "plan_end_at": "2018-10-10",
+                "supervise_corp": "更新监理单位名称",
+                "supervise_end_at": "2018-10-10"
+            }
+        data.update(extra=new_extra)
+        res = self.run_method.post(api,json=data,headers=self.corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["extra"],new_extra,"附加信息未更新成功")
+    
+    def test04_05_zone_update_rsmArea(self):
+        '''case04_05:编辑园区[RSM]--超管更新面积'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        data = self.pub_param.zone_get(zone_id,self.super_header)
+        data.update(area=9999)
+        res = self.run_method.post(api,json=data,headers=self.corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["area"],9999,"面积未更新成功")
 
-    def test03_07_zone_list_noRole(self):
-        '''case03_07:园区列表--组织普通用户'''
-        pass
+    def test04_06_zone_update_noRole(self):
+        '''case04_06:编辑园区[组织普通用户]--更新不成功'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        common_header = self.pub_param.common_user(self.corp_id)
+        data = self.pub_param.zone_get(zone_id,common_header)
+        data.update(area=8888)
+        res = self.run_method.post(api,json=data,headers=common_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res["code"], 1403, "状态码返回错误")
+        self.assertNotEqual(new_data["area"],8888,"面积更新成功")
 
-    # 编辑园区
+    def test04_07_zone_update_otherCorp(self):
+        '''case04_07:编辑园区[其他组织管理员]--更新不成功'''
+        api = "/zone/update"
+        zone_id = self.opera_json.get_data("test01_07_zone_create_success")["zone_id"]
+        other_corp_header = self.pub_param.common_user(self.corp_id,524288)
+        data = self.pub_param.zone_get(zone_id,self.corp_header)
+        data.update(area=7777)
+        res = self.run_method.post(api,json=data,headers=other_corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertNotEqual(new_data["area"], 7777, "面积更新成功")
+
 
     # 删除园区
+    def test05_01_zone_del_success(self):
+        '''case05_01:删除园区[ZCM]--删除成功'''
+        api = "/zone/del"
+        zone_id = self.pub_param.create_zone(header=self.corp_header)
+        data = {"id":zone_id}
+        res = self.run_method.post(api,data,headers=self.corp_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["status"], 3, "园区未成功删除")
 
-    def test05_01_zone_del_noId(self):
-        '''case05_01:删除园区--无ID'''
-        pass
+    def test05_02_zone_del_zsm(self):
+        '''case05_02:删除园区[ZSM]--删除成功'''
+        api = "/zone/del"
+        zone_id = self.pub_param.create_zone(header=self.corp_header)
+        data = {"id":zone_id}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        new_data = self.pub_param.zone_get(zone_id,self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(new_data["status"], 3, "园区未成功删除")
 
-    def test05_02_zone_del_success(self):
-        '''case05_02:删除园区[ZCM]--删除成功'''
-        pass
+    def test05_03_zone_del_noRole(self):
+        '''case05_03:删除园区[普通用户]--删除失败'''
+        api = "/zone/del"
+        zone_id = self.pub_param.create_zone(header=self.corp_header)
+        common_header = self.pub_param.common_user(self.corp_id)
+        data = {"id":zone_id}
+        res = self.run_method.post(api,data,headers=common_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, "普通用户删除园区成功")
 
-    def test05_03_zone_del_success(self):
-        '''case05_03:删除园区[ZSM]--删除成功'''
+    def test05_04_zone_del_otherCorp(self):
+        '''case05_04:删除园区[其他组织管理员]--删除失败'''
         pass

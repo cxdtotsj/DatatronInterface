@@ -68,7 +68,8 @@ class PublicParam:
                 print("Corp密码需修改")
 
     # 公司管理员 header
-    def get_corp_header(self):
+    def get_corp_user(self):
+        '''同时返回 header 、corp_id'''
         corp_token, corp_id = self.get_corp_token()
         return {"Authorization": corp_token}, corp_id
 
@@ -156,23 +157,24 @@ class PublicParam:
             print("用户登录失败")
 
     # 将用户从组织删除
-    def user_corp_del(self, user_id, corp_id=None):
+    def user_corp_del(self, user_id, corp_id=None,corp_header=None):
         del_api = "/corp/user/del"
         if corp_id is not None:
             data = {"corp_id": corp_id,
                     "user_id": user_id}
             del_response = self.run_method.post(
-                del_api, data, headers=self.get_super_header())
+                del_api, data, headers=corp_header)
         else:
             data = {"user_id": user_id}
             del_response = self.run_method.post(
-                del_api, data, headers=self.get_corp_header())
+                del_api, data, headers=self.get_super_header())
         if del_response.status_code is not 200:
             print("用户新增失败")
             print(del_response.json())
 
-    # 创建用户，是否有管理员权限，并返回 header
+    # 创建用户，包括 : 管理员用户，普通用户，返回header
     def common_user(self, corp_id=None, role=None):
+        '''返回user_header'''
         stamp = int(time.time())
         corp_name = "随机组织名称{}".format(stamp)
         random_email = "rd{}@random.com".format(random.randint(100000, 999999))
@@ -224,10 +226,44 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("新增园区失败")
+    
+    # 获取园区详细信息
+    def zone_get(self,zone_id,header):
+        api = "/zone/get"
+        data = {"id": zone_id}
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print(res.json())
+            print("获取园区详细信息失败")
+  
+
+    # 获取建筑详细信息
+    def zbuilding_get(self,building_id,header):
+        api = "/building/get"
+        data = {"id": building_id}
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print("获取建筑详细信息失败")
+
 
 
 if __name__ == "__main__":
     import time
+    import requests
     basedata = PublicParam()
-    zone_id = basedata.create_zone()
-    print(zone_id)
+    # a = basedata.common_user(basedata.get_corp_user()[0])
+    # print(a)
+    # a = basedata.create_user("abc@abc1","test00002",123456)
+    # print(a) # 111532264977871899
+
+    # b = basedata.create_corp("测试登录问题02")
+    # print(b) # 111532290881892908
+
+    basedata.user_add_corp("111532264977871899","111532290881892908")
+

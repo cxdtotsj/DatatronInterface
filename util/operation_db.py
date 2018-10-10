@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pymysql
 import base.setting
@@ -24,6 +27,17 @@ class OperationDB:
                              autocommit=True,
                              cursorclass=pymysql.cursors.DictCursor)
         return db
+
+    # def get_db(self):
+    #     db = pymysql.connect(host='10.241.11.7',
+    #                          port=4000,
+    #                          user='root',
+    #                          password='pAssw0rd',
+    #                          db='datatron',
+    #                          charset="utf8",
+    #                          autocommit=True,
+    #                          cursorclass=pymysql.cursors.DictCursor)
+    #     return db
 
     def get_cursor(self):
         mycursor = self.db.cursor()
@@ -100,6 +114,6 @@ class OperationDB:
 
 if __name__ == '__main__':
     dbdata = OperationDB()
-    sql = '''select id from zyt_classes_hour where classes_id = 32;'''
-    a = dbdata.get_fetchone(sql)
+    sql = '''select id from zone where status != 3;'''
+    a = dbdata.get_effect_row(sql)
     print(a)

@@ -30,14 +30,14 @@ if "db_url" in os.environ:
         db_host = db_url
         db_port = 3306
 else:
-    db_host = "newhero.mysqldb.chinacloudapi.cn"
-    db_port = 3306
+    db_host = "10.241.11.7"
+    db_port = 4000
 
-db_db = os.environ.get("db_db") or "hero"
+db_db = os.environ.get("db_db") or "datatron"
 
-db_user = os.environ.get("db_user") or "newhero%herouser"
+db_user = os.environ.get("db_user") or "root"
 
-db_password = os.environ.get("db_password") or "hero123!@#"
+db_password = os.environ.get("db_password") or "pAssw0rd"
 
 
 if __name__ == '__main__':

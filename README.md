@@ -5,3 +5,5 @@
 - 类
 
     `python -m unittest -v test_01_user.TestUser`
+
+    `python -m unittest -v 1test_03_zone.TestZone.test01_01_zone_create_noName`
