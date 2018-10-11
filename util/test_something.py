@@ -105,10 +105,15 @@ import os
 # print(rs)
 
 
-dict1 = {"a":1,"b":3}
+# dict1 = {"a":1,"b":3}
 
-dict2 = {"c":5,"a":8}
+# dict2 = {"c":5,"a":8}
 
-a = {'id': '111383146515149355', 'corp_id': '109777231634510875', 'name': 'Auto园区名称1539077601', 'loc': {'province': '上海市', 'city': '上海市', 'county': '静安区', 'addr': '恒丰路329号'}, 'coord': {'longitude': 121, 'latitude': 31, 'altitude': 0}, 'building_num': 19, 'building_count': 0, 'area': 50, 'extra': {'build_corp': '建筑单位名称', 'build_start_at': '2018-10-09', 'plan_corp': '施工单位名称', 'plan_end_at': '2018-10-09', 'design_corp': '设计单位名称', 'design_end_at': '2018-10-09', 'construct_corp': '规划单位名称', 'construct_end_at': '2018-10-09', 'supervise_corp': '监理单位名称', 'supervise_end_at': '2018-10-09'}, 'status': 1, 'modify_by': '109777231298966563', 'create_at': '1539077528', 'update_at': '1539159376'}
-a.update(area=40)
-print(a)
+# a = {'id': '111383146515149355', 'corp_id': '', 'name': 'Auto园区名称1539077601', 'loc': {'province': '上海市', 'city': '上海市', 'county': '静安区', 'addr': '恒丰路329号'}, 'coord': {'longitude': 121, 'latitude': 31, 'altitude': 0}, 'building_num': 19, 'building_count': 0, 'area': 50, 'extra': {'build_corp': '建筑单位名称', 'build_start_at': '2018-10-09', 'plan_corp': '施工单位名称', 'plan_end_at': '2018-10-09', 'design_corp': '设计单位名称', 'design_end_at': '2018-10-09', 'construct_corp': '规划单位名称', 'construct_end_at': '2018-10-09', 'supervise_corp': '监理单位名称', 'supervise_end_at': '2018-10-09'}, 'status': 1, 'modify_by': '109777231298966563', 'create_at': '1539077528', 'update_at': '1539159376'}
+# print(a["corp_id"])
+# print(type(a["corp_id"]))
+
+site= {'name': '我的博客地址', 'alexa': 10000, 'url':'http://blog.csdn.net/uuihoo/'}
+site.pop('alexa',"url") # 删除要删除的键值对，如{'name':'我的博客地址'}这个键值对
+print(site)
+

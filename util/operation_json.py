@@ -41,4 +41,5 @@ class OperetionJson:
 
 if __name__ == '__main__':
     json_o = OperetionJson()
-    json_o.check_json_value("test",{"user_id":123,"token":234})
+    a= json_o.get_data("test01_07_zone")
+    print(a)

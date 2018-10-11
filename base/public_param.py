@@ -96,6 +96,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("用户创建失败")
+            print(res.json())
 
     # 创建公司
     def create_corp(self, corp_name):
@@ -108,6 +109,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("组织(公司)创建失败")
+            print(res.json())
 
     # 用户添加到组织（公司）
     def user_add_corp(self, user_id, corp_id, role=None):
@@ -123,8 +125,10 @@ class PublicParam:
             res = self.run_method.post(
                 api, data, headers=self.get_super_header())
             res.raise_for_status()
+            assert res.json()["id"] is not ''
         except:
             print("用户绑定到组织失败")
+            print(res.json())
 
     # 用户第一次登录前重置密码
     def user_pwd_reset(self, user_id, password, newpasswd):
@@ -138,6 +142,7 @@ class PublicParam:
             res.raise_for_status()
         except:
             print("用户重置密码失败")
+            print(res.json())
 
     # 用户登录并返回token
     def user_header(self, password, email=None, mobile=None):
@@ -155,9 +160,10 @@ class PublicParam:
             return {"Authorization": res.json()["token"]}
         except:
             print("用户登录失败")
+            print(res.json())
 
     # 将用户从组织删除
-    def user_corp_del(self, user_id, corp_id=None,corp_header=None):
+    def user_corp_del(self, user_id, corp_id=None, corp_header=None):
         del_api = "/corp/user/del"
         if corp_id is not None:
             data = {"corp_id": corp_id,
@@ -174,7 +180,7 @@ class PublicParam:
 
     # 创建用户，包括 : 管理员用户，普通用户，返回header
     def common_user(self, corp_id=None, role=None):
-        '''返回user_header'''
+        '''返回user_header, 组织管理员 role=524288'''
         stamp = int(time.time())
         corp_name = "随机组织名称{}".format(stamp)
         random_email = "rd{}@random.com".format(random.randint(100000, 999999))
@@ -188,7 +194,7 @@ class PublicParam:
         # 新增用户
         user_id = self.create_user(random_email, user_name, oldpasswd)
         # 用户绑定到组织
-        self.user_add_corp(user_id, corp_id=corp_id,role=role)
+        self.user_add_corp(user_id, corp_id=corp_id, role=role)
         # 用户重置密码
         self.user_pwd_reset(user_id, oldpasswd, newpasswd)
         # 用户登录并返回 header
@@ -198,24 +204,24 @@ class PublicParam:
     # 园区 id
     def create_zone(self, header=None):
         api = '/zone/create'
-        stamp = int(time.time())
-        zone_name = "随机园区名称{}".format(stamp)
+        random_num = int(time.time()) + random.randint(0,100000)
+        zone_name = "随机园区名称{}".format(random_num)
         data = {
-                "name":zone_name,
-                "area":100,
-                "building_num": 19,
-                "loc": {
-                    "province": "上海市",
-                    "city": "上海市",
-                    "county": "静安区",
-                    "addr":"恒丰路329号"
-                },
-                "coord": {
-                    "longitude": 121,
-                    "latitude": 31,
-                    "altitude": 0
-                    }
-                }
+            "name": zone_name,
+            "area": 100,
+            "building_num": 19,
+            "loc": {
+                "province": "上海市",
+                "city": "上海市",
+                "county": "静安区",
+                "addr": "恒丰路329号"
+            },
+            "coord": {
+                "longitude": 121,
+                "latitude": 31,
+                "altitude": 0
+            }
+        }
         if header is not None:
             user_header = header
         else:
@@ -226,44 +232,79 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("新增园区失败")
-    
+            print(res.json())
+
+    # 当传入 zone_id,未传入 header 时，传入的 zone_id 无效
+    def create_building(self, zone_id=None,header=None,is_belong_zone=True):
+        '''返回建筑ID'''
+        api = '/building/create'
+        random_num = int(time.time()) + random.randint(0,100000)
+        zone_name = "随机建筑名称{}".format(random_num)
+        data = {
+            "name": zone_name,
+            "loc": {
+                "province": "上海市",
+                "city": "上海市",
+                "county": "静安区",
+                "addr": "恒丰路329号"
+            },
+            "area": 100,
+            "layer_num": 31,
+            "underlayer_num": 3,
+            "coord": {
+                "altitude": 122,
+                "latitude": 32,
+                "longitude": 0
+            }
+        }
+        if zone_id is not None:
+            is_belong_zone = True
+            data.update(zone_id=zone_id)
+        if header is not None:
+            user_header = header
+        else:
+            user_header = self.common_user(role=524288)
+            zone_id = self.create_zone(header=user_header)
+            if is_belong_zone:
+                data.update(zone_id=zone_id)
+        try:
+            res = self.run_method.post(api, json=data, headers=user_header)
+            res.raise_for_status()
+            return res.json()["id"]
+        except:
+            print("新增建筑失败")
+            print(res.json())
+
     # 获取园区详细信息
-    def zone_get(self,zone_id,header):
+    def zone_get(self, zone_id, header):
         api = "/zone/get"
         data = {"id": zone_id}
         try:
-            res = self.run_method.post(api,data,headers=header)
+            res = self.run_method.post(api, data, headers=header)
             res.raise_for_status()
             return res.json()
         except:
             print(res.json())
             print("获取园区详细信息失败")
-  
 
     # 获取建筑详细信息
-    def zbuilding_get(self,building_id,header):
+    def building_get(self, building_id, header):
         api = "/building/get"
         data = {"id": building_id}
         try:
-            res = self.run_method.post(api,data,headers=header)
+            res = self.run_method.post(api, data, headers=header)
             res.raise_for_status()
             return res.json()
         except:
             print("获取建筑详细信息失败")
 
 
-
 if __name__ == "__main__":
     import time
     import requests
+    # 111656884594815531
     basedata = PublicParam()
-    # a = basedata.common_user(basedata.get_corp_user()[0])
-    # print(a)
-    # a = basedata.create_user("abc@abc1","test00002",123456)
-    # print(a) # 111532264977871899
+    data1 = basedata.create_building(is_belong_zone=False)
+    print(data1)
 
-    # b = basedata.create_corp("测试登录问题02")
-    # print(b) # 111532290881892908
-
-    basedata.user_add_corp("111532264977871899","111532290881892908")
 
