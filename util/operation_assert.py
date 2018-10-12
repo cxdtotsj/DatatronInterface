@@ -65,7 +65,7 @@ class OperationAssert:
 
     def is_equal_value(self,except_value,receive_list,receive_key):
         '''
-        判断 receive_list 中的某个字段的值都为 except_value
+        判断 receive_list 中的 receive_key 的值都为 except_value
         '''
         value_list = list(map(lambda x:x[receive_key],receive_list))
         for each in value_list:
@@ -78,4 +78,3 @@ class OperationAssert:
 
 if __name__ == "__main__":
     assert_result = OperationAssert()
-    

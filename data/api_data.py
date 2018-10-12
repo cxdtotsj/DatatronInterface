@@ -5,11 +5,16 @@ import datetime
 import time
 import random
 
+
 class UserApiData:
 
     #  /user/create
-    user_num = random.randint(1,50)
+    user_num = random.randint(1, 50)
     user_name = "auto_test{}".format(user_num)
+    user_email = "auto{}@auto.com".format(random.randint(100000, 999999))
+    user_mobile = random.randint(10000000000,19999999999)
+    oldpasswd = "123456"
+    newpasswd = "12345678"
 
 
 class CorpApiData:
@@ -19,13 +24,30 @@ class CorpApiData:
 
 class ZoneApiData:
 
-    # /zone/create
     @classmethod
-    def random_num(self):
+    def zone_data(self):
+        # /zone/create
         stamp = int(time.time())
-        random_num = stamp + random.randint(0,100000)
+        random_num = stamp + random.randint(0, 100000)
         zone_name = 'Auto园区名称{}'.format(random_num)
-        return zone_name
+        # 园区新增基础 json，缺少 corp_id, extra 字段
+        data = {
+            "name": zone_name,
+            "area": 1000,
+            "building_num": 19,
+            "loc": {
+                "province": "上海市",
+                "city": "上海市",
+                "county": "静安区",
+                "addr": "恒丰路329号"
+            },
+            "coord": {
+                "longitude": 121,
+                "latitude": 31,
+                "altitude": 0
+            }
+        }
+        return data
 
 
 class BuildingApiData:
@@ -34,7 +56,7 @@ class BuildingApiData:
     def building_data(self):
         # /zone/create
         stamp = int(time.time())
-        random_num = stamp + random.randint(0,100)
+        random_num = stamp + random.randint(0, 100)
         building_name = 'Auto建筑名称{}'.format(random_num)
         # 建筑新增基础 json，缺少 zone_id, extra 字段
         data = {
@@ -55,9 +77,6 @@ class BuildingApiData:
             }
         }
         return data
-
-
-
 
 
 if __name__ == '__main__':

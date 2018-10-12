@@ -84,11 +84,13 @@ class PublicParam:
         return "X-Request-Id : %s" % res.headers["X-Request-Id"]
 
     # 创建用户
-    def create_user(self, email, user_name, passwd):
+    def create_user(self, user_name, passwd, email=None, mobile=None):
         api = '/user/create'
-        data = {"email": email,
-                "name": user_name,
-                "password": passwd}
+        data = {
+            "mobile": mobile,
+            "email": email,
+            "name": user_name,
+            "password": passwd}
         try:
             res = self.run_method.post(
                 api, data, headers=self.get_super_header())
@@ -131,11 +133,22 @@ class PublicParam:
             print(res.json())
 
     # 用户第一次登录前重置密码
-    def user_pwd_reset(self, user_id, password, newpasswd):
+    def user_pwd_reset(self, password, newpasswd, user_id=None, email=None, mobile=None):
+        '''user_id email mobile 三选一'''
+
         api = "/user/passwd/reset"
-        data = {"id": user_id,
-                "password": password,
-                "newpasswd": newpasswd}
+        data = {
+            "password": password,
+            "newpasswd": newpasswd}
+        if user_id is not None:
+            email = None
+            mobile = None
+            data.update(id=user_id)
+        elif email is not None:
+            mobile = None
+            data.update(email=email)
+        elif mobile is not None:
+            data.update(mobile=mobile)
         try:
             res = self.run_method.post(
                 api, data, headers=self.get_super_header())
@@ -179,11 +192,14 @@ class PublicParam:
             print(del_response.json())
 
     # 创建用户，包括 : 管理员用户，普通用户，返回header
+
     def common_user(self, corp_id=None, role=None):
         '''返回user_header, 组织管理员 role=524288'''
+
         stamp = int(time.time())
         corp_name = "随机组织名称{}".format(stamp)
         random_email = "rd{}@random.com".format(random.randint(100000, 999999))
+        random_mobile = random.randint(10000000000, 19999999999)
         user_name = "随机生成用户"
         oldpasswd = "123456"
         newpasswd = "12345678"
@@ -192,19 +208,43 @@ class PublicParam:
         else:
             corp_id = self.create_corp(corp_name)
         # 新增用户
-        user_id = self.create_user(random_email, user_name, oldpasswd)
+        user_id = self.create_user(
+            user_name, oldpasswd, email=random_email, mobile=random_mobile)
         # 用户绑定到组织
         self.user_add_corp(user_id, corp_id=corp_id, role=role)
         # 用户重置密码
-        self.user_pwd_reset(user_id, oldpasswd, newpasswd)
+        self.user_pwd_reset(oldpasswd, newpasswd, user_id=user_id)
         # 用户登录并返回 header
         user_header = self.user_header(newpasswd, email=random_email)
         return user_header
 
+    # 新增用户，修改密码，绑定到组织,返回 email、mobile、user_id
+    def user_reset_corp(self, corp_id=None, role=None):
+        '''返回email、mobile、user_id, 组织管理员 role=524288'''
+
+        stamp = int(time.time())
+        corp_name = "随机组织名称{}".format(stamp)
+        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
+        random_mobile = random.randint(10000000000, 19999999999)
+        user_name = "随机生成用户"
+        oldpasswd = "123456"
+        newpasswd = "12345678"
+        if corp_id is not None:
+            corp_id = corp_id
+        else:
+            corp_id = self.create_corp(corp_name)
+        # 新增用户
+        user_id = self.create_user(user_name, oldpasswd,email=random_email, mobile=random_mobile)
+        # 用户重置密码
+        self.user_pwd_reset(oldpasswd, newpasswd, user_id=user_id)
+        # 用户绑定到组织
+        self.user_add_corp(user_id, corp_id=corp_id, role=role)
+        return random_email,random_mobile,user_id
+
     # 园区 id
     def create_zone(self, header=None):
         api = '/zone/create'
-        random_num = int(time.time()) + random.randint(0,100000)
+        random_num = int(time.time()) + random.randint(0, 100000)
         zone_name = "随机园区名称{}".format(random_num)
         data = {
             "name": zone_name,
@@ -235,10 +275,10 @@ class PublicParam:
             print(res.json())
 
     # 当传入 zone_id,未传入 header 时，传入的 zone_id 无效
-    def create_building(self, zone_id=None,header=None,is_belong_zone=True):
+    def create_building(self, zone_id=None, header=None, is_belong_zone=True):
         '''返回建筑ID'''
         api = '/building/create'
-        random_num = int(time.time()) + random.randint(0,100000)
+        random_num = int(time.time()) + random.randint(0, 100000)
         zone_name = "随机建筑名称{}".format(random_num)
         data = {
             "name": zone_name,
@@ -284,8 +324,8 @@ class PublicParam:
             res.raise_for_status()
             return res.json()
         except:
-            print(res.json())
             print("获取园区详细信息失败")
+            print(res.json())
 
     # 获取建筑详细信息
     def building_get(self, building_id, header):
@@ -304,7 +344,5 @@ if __name__ == "__main__":
     import requests
     # 111656884594815531
     basedata = PublicParam()
-    data1 = basedata.create_building(is_belong_zone=False)
+    data1 = basedata.user_reset_corp()
     print(data1)
-
-
