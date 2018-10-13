@@ -305,65 +305,93 @@ class TestUser(unittest.TestCase, User):
     # 新用户修改密码
     def test04_01_user_passwd_reset_id(self):
         '''case04_01:重置用户密码--输入id修改密码并能登录'''
+
         api = '/user/passwd/reset'
-        *__,user_id = self.pub_param.user_reset_corp(self.corp_id)
+        user_email,__,user_id = self.pub_param.user_corp(self.corp_id)
+        data = {
+            "id":user_id,
+            "password":123456,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        login_res = self.pub_param.user_header(12345678,email=user_email)
+        self.assertEqual(res.status_code,200,res.json())
+        self.assertTrue(login_res["Authorization"],res.json())
 
     def test04_02_user_passwd_reset_mobile(self):
         '''case04_02:重置用户密码--输入手机修改密码并能登录'''
-        pass
+
+        api = '/user/passwd/reset'
+        __,user_mobile,__ = self.pub_param.user_corp(self.corp_id)
+        data = {
+            "mobile":user_mobile,
+            "password":123456,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        login_res = self.pub_param.user_header(12345678,mobile=user_mobile)
+        self.assertEqual(res.status_code,200,res.json())
+        self.assertTrue(login_res["Authorization"],res.json())
 
     def test04_03_user_passwd_reset_email(self):
         '''case04_03:重置用户密码--输入邮箱修改密码并能登录'''
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "password":123456,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        login_res = self.pub_param.user_header(12345678,email=user_email)
+        self.assertEqual(res.status_code,200,res.json())
+        self.assertTrue(login_res["Authorization"],res.json())
+
+    def test04_04_user_passwd_reset_noPasswd(self):
+        '''case04_04:重置用户密码[ZSM]--新密码为空'''
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "password":123456,
+            "newpasswd":None}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1401, res.json())
+
+    def test04_05_user_passwd_reset_errPasswd(self):
+        '''case04_05:重置用户密码[RSM]--新密码小于6位'''
         pass
 
-    # 老用户修改密码
-    def test04_04_user_passwd_reset_errPassword(self):
-        '''case04_04:重置用户密码--输入错误的旧密码'''
+    def test04_06_user_passwd_reset_noToken(self):
+        '''case04_06:重置用户密码[RSM]--原密码不填，无token'''
         pass
 
-    def test04_05_user_passwd_reset_noPasswd(self):
-        '''case04_05:重置用户密码--新密码为空'''
+    def test04_07_user_passwd_reset_mustFalse(self):
+        '''case04_07:重置用户密码--超管修改密码后登录（需要重置密码）'''
         pass
 
-    def test04_06_user_passwd_reset_errPasswd(self):
-        '''case04_06:重置用户密码--新密码小于6位'''
+    def test04_08_user_passwd_reset_noRole(self):
+        '''case04_08:重置用户密码[普通用户]--修改其他用户密码'''
         pass
 
-    def test04_07_user_passwd_reset_oldToken(self):
-        '''case04_07:重置用户密码--修改密码后使用旧token操作'''
+    def test04_09_user_passwd_reset_oldLonin(self):
+        '''case04_09:重置用户密码[RSM]--修改密码后用旧密码登录'''
         pass
 
-    def test04_08_user_passwd_reset_oldLonin(self):
-        '''case04_08:重置用户密码--修改密码后用旧密码登录'''
+    def test04_10_user_passwd_reset_newLogin(self):
+        '''case04_10:重置用户密码[RSM]--修改密码后用新密码登录'''
         pass
 
-    def test04_09_user_passwd_reset_newLogin(self):
-        '''case04_09:重置用户密码--修改密码后用新密码登录'''
+    def test04_11_user_passwd_reset_oldToken(self):
+        '''case04_11:重置用户密码[RCM]--修改密码后使用旧token操作'''
         pass
 
-    # 超管修改密码
-    def test04_10_user_passwd_reset_noToken(self):
-        '''case04_10:重置用户密码--原密码不填，无token'''
+    def test04_12_user_passwd_reset_Corp(self):
+        '''case04_12:重置用户密码[RCM]--修改本组织普通用户密码(原密码为空)'''
         pass
 
-    def test04_11_user_passwd_reset_mustTrue(self):
-        '''case04_11:重置用户密码--超管修改密码后登录（未重置密码）'''
-        pass
-
-    def test04_12_user_passwd_reset_mustFalse(self):
-        '''case04_12:重置用户密码--超管修改密码后登录（未重置密码）'''
-        pass
-
-    def test04_13_user_passwd_reset_noRole(self):
-        '''case04_13:重置用户密码[普通用户]--修改其他用户密码'''
-        pass
-
-    def test04_14_user_passwd_reset_Corp(self):
-        '''case04_14:重置用户密码[RCM]--修改本组织普通用户密码'''
-        pass
-
-    def test04_15_user_passwd_reset_otherCorp(self):
-        '''case04_15:重置用户密码[RCM]--修改其他组织用户密码'''
+    def test04_13_user_passwd_reset_otherCorp(self):
+        '''case04_13:重置用户密码[RCM]--修改其他组织用户密码'''
         pass
 
 if __name__ == '__main__':

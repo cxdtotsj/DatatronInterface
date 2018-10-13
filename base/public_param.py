@@ -192,9 +192,8 @@ class PublicParam:
             print(del_response.json())
 
     # 创建用户，包括 : 管理员用户，普通用户，返回header
-
     def common_user(self, corp_id=None, role=None):
-        '''返回user_header, 组织管理员 role=524288'''
+        '''自动生成email、mobile,返回user_header, 组织管理员 role=1<<19'''
 
         stamp = int(time.time())
         corp_name = "随机组织名称{}".format(stamp)
@@ -237,9 +236,32 @@ class PublicParam:
         user_id = self.create_user(user_name, oldpasswd,email=random_email, mobile=random_mobile)
         # 用户重置密码
         self.user_pwd_reset(oldpasswd, newpasswd, user_id=user_id)
+        print(user_id)
+        print(random_email)
         # 用户绑定到组织
         self.user_add_corp(user_id, corp_id=corp_id, role=role)
         return random_email,random_mobile,user_id
+
+    # 新增用户，并绑定到组织, 未修改密码
+    def user_corp(self,corp_id=None,role=None):
+        """返回email、mobile、user_id, 组织管理员 role=524288"""
+
+        stamp = int(time.time())
+        corp_name = "随机组织名称{}".format(stamp)
+        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
+        random_mobile = random.randint(10000000000, 19999999999)
+        user_name = "随机生成用户"
+        oldpasswd = "123456"
+        if corp_id is not None:
+            corp_id = corp_id
+        else:
+            corp_id = self.create_corp(corp_name)
+        # 新增用户
+        user_id = self.create_user(user_name,oldpasswd,email=random_email,mobile=random_mobile)
+        # 用户绑定到组织
+        self.user_add_corp(user_id, corp_id=corp_id, role=role)
+        return random_email,random_mobile,user_id
+
 
     # 园区 id
     def create_zone(self, header=None):
@@ -344,5 +366,5 @@ if __name__ == "__main__":
     import requests
     # 111656884594815531
     basedata = PublicParam()
-    data1 = basedata.user_reset_corp()
+    data1 = basedata.user_reset_corp(corp_id="109777231634510875")
     print(data1)
