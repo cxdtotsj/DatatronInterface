@@ -113,7 +113,10 @@ import os
 # print(a["corp_id"])
 # print(type(a["corp_id"]))
 
-site= {'name': '我的博客地址', 'alexa': 10000, 'url':'http://blog.csdn.net/uuihoo/'}
-site.pop('alexa',"url") # 删除要删除的键值对，如{'name':'我的博客地址'}这个键值对
-print(site)
+# site= {'name': '我的博客地址', 'alexa': 10000, 'url':'http://blog.csdn.net/uuihoo/'}
+# site.pop('alexa',"url") # 删除要删除的键值对，如{'name':'我的博客地址'}这个键值对
+# print(site)
+
+list1 = [1,2,3]
+print(sum(list1))
 

@@ -25,7 +25,7 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "eamil": User.user_email,
+            "eamil": User.user_email(),
             "name": None,
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.super_header)
@@ -37,7 +37,7 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "eamil": User.user_email,
+            "eamil": User.user_email(),
             "name": "test04",
             "password": None}
         res = self.run_method.post(api, data, headers=self.super_header)
@@ -49,8 +49,8 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "eamil": User.user_email,
-            "name": User.user_name,
+            "eamil": User.user_email(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data)
         self.assertEqual(res.status_code, 401, res.json())
@@ -61,7 +61,7 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "name": User.user_name,
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 400, res.json())
@@ -72,8 +72,8 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "email": User.user_email,
-            "name": User.user_name,
+            "email": User.user_email(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 200, res.json())
@@ -88,7 +88,7 @@ class TestUser(unittest.TestCase, User):
         repeat_email = self.opera_json.get_data("test01_05_user")
         data = {
             "email": repeat_email,
-            "name": User.user_name,
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 400, res.json())
@@ -99,8 +99,8 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "mobile": User.user_mobile,
-            "name": User.user_name,
+            "mobile": User.user_mobile(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 200, res.json())
@@ -115,7 +115,7 @@ class TestUser(unittest.TestCase, User):
         repeat_mobile = self.opera_json.get_data("test01_07_user")
         data = {
             "mobile": repeat_mobile,
-            "name": User.user_name,
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 400, res.json())
@@ -127,8 +127,8 @@ class TestUser(unittest.TestCase, User):
         common_user_header = self.pub_param.common_user(self.corp_id)
         api = "/user/create"
         data = {
-            "email": User.user_email,
-            "name": User.user_name,
+            "email": User.user_email(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=common_user_header)
         self.assertEqual(res.status_code, 403, res.json())
@@ -139,8 +139,8 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "email": User.user_email,
-            "name": User.user_name,
+            "email": User.user_email(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.corp_header)
         self.assertEqual(res.status_code, 200, res.json())
@@ -150,8 +150,8 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "mobile": User.user_mobile,
-            "name": User.user_name,
+            "mobile": User.user_mobile(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.corp_header)
         self.assertEqual(res.status_code, 200, res.json())
@@ -161,9 +161,9 @@ class TestUser(unittest.TestCase, User):
 
         api = "/user/create"
         data = {
-            "mobile": User.user_mobile,
-            "email": User.user_email,
-            "name": User.user_name,
+            "mobile": User.user_mobile(),
+            "email": User.user_email(),
+            "name": User.user_name(),
             "password": "123456"}
         res = self.run_method.post(api, data, headers=self.corp_header)
         self.assertEqual(res.status_code, 200, res.json())
@@ -304,7 +304,7 @@ class TestUser(unittest.TestCase, User):
 
     # 新用户修改密码
     def test04_01_user_passwd_reset_id(self):
-        '''case04_01:重置用户密码--输入id修改密码并能登录'''
+        '''case04_01:重置用户密码[普通用户]--输入id修改密码并能登录'''
 
         api = '/user/passwd/reset'
         user_email,__,user_id = self.pub_param.user_corp(self.corp_id)
@@ -312,13 +312,13 @@ class TestUser(unittest.TestCase, User):
             "id":user_id,
             "password":123456,
             "newpasswd":12345678}
-        res = self.run_method.post(api,data,headers=self.super_header)
+        res = self.run_method.post(api,data)
         login_res = self.pub_param.user_header(12345678,email=user_email)
         self.assertEqual(res.status_code,200,res.json())
         self.assertTrue(login_res["Authorization"],res.json())
 
     def test04_02_user_passwd_reset_mobile(self):
-        '''case04_02:重置用户密码--输入手机修改密码并能登录'''
+        '''case04_02:重置用户密码[普通用户]--输入手机修改密码并能登录'''
 
         api = '/user/passwd/reset'
         __,user_mobile,__ = self.pub_param.user_corp(self.corp_id)
@@ -326,13 +326,13 @@ class TestUser(unittest.TestCase, User):
             "mobile":user_mobile,
             "password":123456,
             "newpasswd":12345678}
-        res = self.run_method.post(api,data,headers=self.super_header)
+        res = self.run_method.post(api,data)
         login_res = self.pub_param.user_header(12345678,mobile=user_mobile)
         self.assertEqual(res.status_code,200,res.json())
         self.assertTrue(login_res["Authorization"],res.json())
 
     def test04_03_user_passwd_reset_email(self):
-        '''case04_03:重置用户密码--输入邮箱修改密码并能登录'''
+        '''case04_03:重置用户密码[普通用户]--输入邮箱修改密码并能登录'''
 
         api = '/user/passwd/reset'
         user_email,*__ = self.pub_param.user_corp(self.corp_id)
@@ -340,59 +340,140 @@ class TestUser(unittest.TestCase, User):
             "email":user_email,
             "password":123456,
             "newpasswd":12345678}
-        res = self.run_method.post(api,data,headers=self.super_header)
+        res = self.run_method.post(api,data)
         login_res = self.pub_param.user_header(12345678,email=user_email)
         self.assertEqual(res.status_code,200,res.json())
         self.assertTrue(login_res["Authorization"],res.json())
 
     def test04_04_user_passwd_reset_noPasswd(self):
-        '''case04_04:重置用户密码[ZSM]--新密码为空'''
+        '''case04_04:重置用户密码[RSM]--新密码为空'''
 
         api = '/user/passwd/reset'
         user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
         data = {
             "email":user_email,
-            "password":123456,
             "newpasswd":None}
         res = self.run_method.post(api,data,headers=self.super_header)
         self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test04_05_user_passwd_reset_errPasswd(self):
         '''case04_05:重置用户密码[RSM]--新密码小于6位'''
-        pass
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "newpasswd":12345}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test04_06_user_passwd_reset_noToken(self):
         '''case04_06:重置用户密码[RSM]--原密码不填，无token'''
-        pass
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "newpasswd":123456}
+        res = self.run_method.post(api,data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test04_07_user_passwd_reset_mustFalse(self):
         '''case04_07:重置用户密码--超管修改密码后登录（需要重置密码）'''
-        pass
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "newpasswd":1234567,
+            "mustReset":"true"}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        login_data = {
+            "email":user_email,
+            "password":1234567}
+        login_res = self.run_method.post("/user/login",login_data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(login_res.json()["code"],1426,login_res.json())
 
     def test04_08_user_passwd_reset_noRole(self):
         '''case04_08:重置用户密码[普通用户]--修改其他用户密码'''
-        pass
+
+        api = '/user/passwd/reset'
+        
+        # 创建组织普通用户
+        common_user_header = self.pub_param.common_user(self.corp_id)
+        # 创建其他组织的用户，返回email
+        user_email,*__ = self.pub_param.user_reset_corp()
+        data = {
+            "email":user_email,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=common_user_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test04_09_user_passwd_reset_oldLonin(self):
         '''case04_09:重置用户密码[RSM]--修改密码后用旧密码登录'''
-        pass
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        login_data = {
+            "email":user_email,
+            "password":123456}
+        login_res = self.run_method.post("/user/login",login_data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(login_res.json()["code"],1401,login_res.json())
 
     def test04_10_user_passwd_reset_newLogin(self):
         '''case04_10:重置用户密码[RSM]--修改密码后用新密码登录'''
-        pass
 
-    def test04_11_user_passwd_reset_oldToken(self):
-        '''case04_11:重置用户密码[RCM]--修改密码后使用旧token操作'''
-        pass
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.super_header)
+        login_data = {
+            "email":user_email,
+            "password":12345678}
+        login_res = self.run_method.post("/user/login",login_data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(login_res.status_code,200,login_res.json())
 
-    def test04_12_user_passwd_reset_Corp(self):
-        '''case04_12:重置用户密码[RCM]--修改本组织普通用户密码(原密码为空)'''
-        pass
+    @unittest.skip("确认 组织管理员是否可以修改密码？")
+    def test04_11_user_passwd_reset_Corp(self):
+        '''case04_11:重置用户密码[RCM]--修改本组织普通用户密码(原密码为空)'''
 
-    def test04_13_user_passwd_reset_otherCorp(self):
-        '''case04_13:重置用户密码[RCM]--修改其他组织用户密码'''
-        pass
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp(self.corp_id)
+        data = {
+            "email":user_email,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.corp_header)
+        login_data = {
+            "email":user_email,
+            "password":12345678}
+        login_res = self.run_method.post("/user/login",login_data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(login_res.status_code,200,login_res.json())
+
+    def test04_12_user_passwd_reset_otherCorp(self):
+        '''case04_12:重置用户密码[RCM]--修改其他组织用户密码'''
+
+        api = '/user/passwd/reset'
+        user_email,*__ = self.pub_param.user_reset_corp()
+        data = {
+            "email":user_email,
+            "newpasswd":12345678}
+        res = self.run_method.post(api,data,headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"],1401,res.json())
 
 if __name__ == '__main__':
     unittest.main()

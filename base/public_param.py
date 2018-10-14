@@ -99,6 +99,7 @@ class PublicParam:
         except:
             print("用户创建失败")
             print(res.json())
+            return res.json()
 
     # 创建公司
     def create_corp(self, corp_name):
@@ -236,8 +237,6 @@ class PublicParam:
         user_id = self.create_user(user_name, oldpasswd,email=random_email, mobile=random_mobile)
         # 用户重置密码
         self.user_pwd_reset(oldpasswd, newpasswd, user_id=user_id)
-        print(user_id)
-        print(random_email)
         # 用户绑定到组织
         self.user_add_corp(user_id, corp_id=corp_id, role=role)
         return random_email,random_mobile,user_id

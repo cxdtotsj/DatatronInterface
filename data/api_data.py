@@ -9,10 +9,21 @@ import random
 class UserApiData:
 
     #  /user/create
-    user_num = random.randint(1, 50)
-    user_name = "auto_test{}".format(user_num)
-    user_email = "auto{}@auto.com".format(random.randint(100000, 999999))
-    user_mobile = random.randint(10000000000,19999999999)
+    @classmethod
+    def user_name(self):
+        user_name = "auto_test{}".format(random.randint(1, 50))
+        return user_name
+
+    @classmethod
+    def user_email(self):
+        user_email = "auto{}@auto.com".format(random.randint(100000, 999999))
+        return user_email
+
+    @classmethod
+    def user_mobile(self):
+        user_mobile = random.randint(10000000000,19999999999)
+        return user_mobile
+
     oldpasswd = "123456"
     newpasswd = "12345678"
 
