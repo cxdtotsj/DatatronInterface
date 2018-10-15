@@ -475,5 +475,6 @@ class TestUser(unittest.TestCase, User):
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"],1401,res.json())
 
+
 if __name__ == '__main__':
     unittest.main()
