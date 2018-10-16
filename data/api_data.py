@@ -30,7 +30,12 @@ class UserApiData:
 
 class CorpApiData:
 
-    pass
+    @classmethod
+    def corp_name(self):
+        stamp = int(time.time())
+        random_num = stamp + random.randint(0, 100000)
+        corp_name = 'Auto组织名称{}'.format(random_num)
+        return corp_name
 
 
 class ZoneApiData:

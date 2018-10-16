@@ -1,11 +1,18 @@
 # DatatronInterface
 建筑数字魔方项目接口
 
-# 单元测试调试命令
-- 类
+# 安装依赖
 
-    `python -m unittest -v 1test_01_user.TestUser. `
+`pip install -r requirments.txt`
 
-    `python -m unittest -v 1test_03_zone.TestZone. `
+# 运行脚本
 
-    `python -m unittest -v 1test_04_building.TestBuilding. `
+1. 命令行进入目录 `atd_test`
+2. 运行unittest命令:
+    
+    1. 运行单个用例:
+        `python -m unittest TestModule.TestClass.TestFunc`
+    2. 运行类:
+        `python -m unittest TestModule.TestClass`
+    3. 测试发现:
+        `python -m unittest discover -v`

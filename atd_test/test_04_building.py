@@ -1,4 +1,14 @@
-'''建筑类接口'''
+'''
+园区类接口
+
+test01 : /building/create
+test02 : /building/get
+test03 : /building/list
+test04 : /building/update
+test05 : /building/del
+
+'''
+
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -235,6 +245,26 @@ class TestBuilding(unittest.TestCase):
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, res.json())
 
+    @unittest.skip("存在BUG，暂时跳过")
+    def test01_16_building_create_delCorpUser(self):
+        '''case01_16:创建建筑--已删除管理员新增建筑'''
+
+        api = '/building/create'
+        data = Building.building_data()
+        
+        # 获取该用户 token
+        user_email,__,user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
+        user_header = self.pub_param.user_header(12345678,email=user_email)
+
+        # 把用户从 corp 中删除
+        self.pub_param.user_corp_del(user_id,self.corp_id)
+
+        # 新增园区
+        res = self.run_method.post(api,json=data,headers=user_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+
+
     def test02_01_building_get_noId(self):
         '''case02_01:获取建筑详细信息--无建筑ID'''
 
@@ -280,8 +310,8 @@ class TestBuilding(unittest.TestCase):
         # 判断 新增的园区信息 是否返回正确
         self.opera_assert.is_dict_in(building_name, res.json())
 
-    def test02_06_building_get_noRole(self):
-        '''case02_06:获取建筑详细信息--普通组织用户'''
+    def test02_05_building_get_noRole(self):
+        '''case02_05:获取建筑详细信息--普通组织用户'''
 
         api = '/building/get'
         building_id = self.opera_json.get_data("test01_09_building")["id"]
@@ -293,8 +323,8 @@ class TestBuilding(unittest.TestCase):
         # 判断 新增的园区信息 是否返回正确
         self.opera_assert.is_dict_in(building_name, res.json())
 
-    def test02_07_building_get_noRole(self):
-        '''case02_07:获取建筑详细信息--错误的建筑ID'''
+    def test02_06_building_get_noRole(self):
+        '''case02_06:获取建筑详细信息--错误的建筑ID'''
 
         api = '/building/get'
         data = {"id": "11223344"}
@@ -511,6 +541,29 @@ class TestBuilding(unittest.TestCase):
         self.assertEqual(res.status_code, 200, res.json())
         self.assertNotEqual(new_data["area"], 66, "面积更新成功")
 
+    @unittest.skip("存在BUG,暂时跳过")
+    def test01_12_building_update_delCorpUser(self):
+        '''case01_12:更新建筑--已删除管理员编辑建筑'''
+
+        api = '/building/update'
+        building_id = self.opera_json.get_data("test01_09_building")["id"]
+        data = self.pub_param.building_get(building_id, self.corp_header)
+        data.update(area=199)
+
+        # 获取该用户 token
+        user_email,__,user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
+        user_header = self.pub_param.user_header(12345678,email=user_email)
+
+        # 把用户从 corp 中删除
+        self.pub_param.user_corp_del(user_id,self.corp_id)
+
+        # 编辑建筑
+        res = self.run_method.post(api,json=data,headers=user_header)
+        new_data = self.pub_param.building_get(building_id, self.corp_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertNotEqual(new_data["area"], 199, "普通用户面积更新成功")
+
     def test05_01_building_del_success(self):
         '''case05_01:删除建筑[ZCM]--删除成功'''
 
@@ -570,3 +623,25 @@ class TestBuilding(unittest.TestCase):
         new_data = self.pub_param.building_get(building_id, self.corp_header)
         self.assertEqual(res.status_code, 200, res.json())
         self.assertNotEqual(new_data["status"],3,"其他组织管理员删除建筑成功")
+
+    @unittest.skip("存在BUG,暂时跳过")
+    def test06_06_building_del_delCorpUser(self):
+        '''case06_06:删除建筑--已删除管理员删除建筑'''
+
+        api = '/building/del'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        data = {"id": building_id}
+
+        # 获取该用户 token
+        user_email,__,user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
+        user_header = self.pub_param.user_header(12345678,email=user_email)
+
+        # 把用户从 corp 中删除
+        self.pub_param.user_corp_del(user_id,self.corp_id)
+
+        # 编辑建筑
+        res = self.run_method.post(api, data, headers=user_header)
+        new_data = self.pub_param.building_get(building_id, self.corp_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, "普通用户删除园区成功")
+        self.assertNotEqual(new_data["status"],3,"普通用户删除建筑成功")

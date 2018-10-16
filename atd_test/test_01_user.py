@@ -1,4 +1,13 @@
-'''用户类接口'''
+'''
+用户类接口
+
+test01 : /user/create
+test02 : /user/list
+test03 : /user/login
+test04 : /user/passwd/reset
+
+'''
+
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

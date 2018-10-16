@@ -102,8 +102,14 @@ class PublicParam:
             return res.json()
 
     # 创建公司
-    def create_corp(self, corp_name):
+    def create_corp(self, corp_name=None):
+        '''返回 corp_id'''
         api = "/corp/create"
+        if corp_name is not None:
+            corp_name = corp_name
+        else:
+            stamp = int(time.time())
+            corp_name = "随机组织名称{}".format(stamp)
         data = {"name": corp_name}
         try:
             res = self.run_method.post(
@@ -186,10 +192,12 @@ class PublicParam:
                 del_api, data, headers=corp_header)
         else:
             data = {"user_id": user_id}
+        try:
             del_response = self.run_method.post(
                 del_api, data, headers=self.get_super_header())
-        if del_response.status_code is not 200:
-            print("用户新增失败")
+            del_response.raise_for_status
+        except:
+            print("用户删除失败")
             print(del_response.json())
 
     # 创建用户，包括 : 管理员用户，普通用户，返回header
@@ -240,6 +248,22 @@ class PublicParam:
         # 用户绑定到组织
         self.user_add_corp(user_id, corp_id=corp_id, role=role)
         return random_email,random_mobile,user_id
+
+    # 新增用户，修改密码，绑定到组织,返回 email、mobile、user_id
+    def user_reset(self):
+        '''返回email、mobile、user_id'''
+
+        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
+        random_mobile = random.randint(10000000000, 19999999999)
+        user_name = "随机生成用户"
+        oldpasswd = "123456"
+        newpasswd = "12345678"
+        # 新增用户
+        user_id = self.create_user(user_name, oldpasswd,email=random_email, mobile=random_mobile)
+        # 用户重置密码
+        self.user_pwd_reset(oldpasswd, newpasswd, user_id=user_id)
+        return random_email,random_mobile,user_id
+
 
     # 新增用户，并绑定到组织, 未修改密码
     def user_corp(self,corp_id=None,role=None):
@@ -365,5 +389,10 @@ if __name__ == "__main__":
     import requests
     # 111656884594815531
     basedata = PublicParam()
-    data1 = basedata.user_reset_corp(corp_id="109777231634510875")
-    print(data1)
+    # data1 = basedata.user_reset_corp(corp_id="109777231634510875",role=1<<19)
+
+    # user_header = basedata.user_header(12345678,email='rd371316@random.com')
+    # print(user_header)
+
+    basedata.user_corp_del('112378848313619500',corp_id='109777231634510875')
+    # print(data1)
