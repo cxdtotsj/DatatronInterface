@@ -36,7 +36,7 @@ class TestZone(unittest.TestCase):
 
     def test01_01_zone_create_noName(self):
         '''case01_01:创建园区--无园区名称'''
-        
+
         api = '/zone/create'
         data = Zone.zone_data()
         data.pop("name")
@@ -92,7 +92,7 @@ class TestZone(unittest.TestCase):
 
     def test01_06_zone_create_noExtra(self):
         '''case01_06:创建园区[ZCM]--无附加信息'''
-        
+
         api = '/zone/create'
         data = Zone.zone_data()
         res = self.run_method.post(api, json=data, headers=self.corp_header)
@@ -185,17 +185,17 @@ class TestZone(unittest.TestCase):
         data = Zone.zone_data()
 
         # 获取该用户 token
-        user_email,__,user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
-        user_header = self.pub_param.user_header(12345678,email=user_email)
+        user_email, __, user_id = self.pub_param.user_reset_corp(
+            self.corp_id, role=1 << 19)
+        user_header = self.pub_param.user_header(12345678, email=user_email)
 
         # 把用户从 corp 中删除
-        self.pub_param.user_corp_del(user_id,self.corp_id)
+        self.pub_param.user_corp_del(user_id, self.corp_id)
 
         # 新增园区
-        res = self.run_method.post(api,json=data,headers=user_header)
+        res = self.run_method.post(api, json=data, headers=user_header)
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
-
 
     def test02_01_zone_get_noId(self):
         '''case02_01:获取园区详细信息--无园区ID'''
@@ -428,19 +428,19 @@ class TestZone(unittest.TestCase):
         data.update(area=6789)
 
         # 获取该用户 token
-        user_email,__,user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
-        user_header = self.pub_param.user_header(12345678,email=user_email)
+        user_email, __, user_id = self.pub_param.user_reset_corp(
+            self.corp_id, role=1 << 19)
+        user_header = self.pub_param.user_header(12345678, email=user_email)
 
         # 把用户从 corp 中删除
-        self.pub_param.user_corp_del(user_id,self.corp_id)
+        self.pub_param.user_corp_del(user_id, self.corp_id)
 
         # 编辑园区
-        res = self.run_method.post(api,json=data,headers=user_header)
+        res = self.run_method.post(api, json=data, headers=user_header)
         new_data = self.pub_param.zone_get(zone_id, self.corp_header)
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
         self.assertNotEqual(new_data["area"], 6789, "普通用户面积更新成功")
-
 
     def test05_01_zone_del_success(self):
         '''case05_01:删除园区[ZCM]--删除成功'''
@@ -480,7 +480,7 @@ class TestZone(unittest.TestCase):
 
     def test05_04_zone_del_otherCorp(self):
         '''case05_04:删除园区[其他组织管理员]--删除失败'''
-        
+
         api = '/zone/del'
         zone_id = self.pub_param.create_zone(header=self.corp_header)
         other_corp_header = self.pub_param.common_user(role=524288)
@@ -499,14 +499,15 @@ class TestZone(unittest.TestCase):
         data = {"id": zone_id}
 
         # 获取该用户 token
-        user_email,__,user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
-        user_header = self.pub_param.user_header(12345678,email=user_email)
+        user_email, __, user_id = self.pub_param.user_reset_corp(
+            self.corp_id, role=1 << 19)
+        user_header = self.pub_param.user_header(12345678, email=user_email)
 
         # 把用户从 corp 中删除
-        self.pub_param.user_corp_del(user_id,self.corp_id)
+        self.pub_param.user_corp_del(user_id, self.corp_id)
 
         # 删除园区
-        res = self.run_method.post(api,data,headers=user_header)
+        res = self.run_method.post(api, data, headers=user_header)
         zone_detail = self.pub_param.zone_get(zone_id, self.corp_header)
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, "状态码返回错误")

@@ -555,14 +555,15 @@ class TestCorp(unittest.TestCase, Corp):
         data = {"user_id": user_id}
 
         # 获取该用户 token
-        user_email,__,del_user_id = self.pub_param.user_reset_corp(self.corp_id,role=1<<19)
-        user_header = self.pub_param.user_header(12345678,email=user_email)
+        user_email, __, del_user_id = self.pub_param.user_reset_corp(
+            self.corp_id, role=1 << 19)
+        user_header = self.pub_param.user_header(12345678, email=user_email)
 
         # 把用户从 corp 中删除
-        self.pub_param.user_corp_del(del_user_id,self.corp_id)
+        self.pub_param.user_corp_del(del_user_id, self.corp_id)
 
         # 移除用户
-        res = self.run_method.post(api,data,headers=user_header)
+        res = self.run_method.post(api, data, headers=user_header)
         sql = '''select status from corp_user where user_id = '{}';'''.format(
             user_id)
         corp_user_status = self.opera_db.get_fetchone(sql)
