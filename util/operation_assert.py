@@ -63,6 +63,7 @@ class OperationAssert:
         for each in except_list:
             assert each in receive_list,"新增后返回的结果不正确"
 
+
     def is_equal_value(self,except_value,receive_list,receive_key):
         '''
         判断 receive_list 中的 receive_key 的值都为 except_value

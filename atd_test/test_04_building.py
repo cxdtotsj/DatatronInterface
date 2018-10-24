@@ -469,7 +469,8 @@ class TestBuilding(unittest.TestCase):
         new_coord = {
             "longitude": 200,
             "latitude": 200,
-            "altitude": 100
+            "altitude": 100,
+            "angle":90
         }
         data.update(coord=new_coord)
         res = self.run_method.post(api, json=data, headers=self.corp_header)

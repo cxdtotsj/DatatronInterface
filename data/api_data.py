@@ -60,7 +60,8 @@ class ZoneApiData:
             "coord": {
                 "longitude": 121,
                 "latitude": 31,
-                "altitude": 0
+                "altitude": 0,
+                "angle":0
             }
         }
         return data
@@ -89,7 +90,8 @@ class BuildingApiData:
             "coord": {
                 "altitude": 122,
                 "latitude": 32,
-                "longitude": 0
+                "longitude": 0,
+                "angle":0
             }
         }
         return data

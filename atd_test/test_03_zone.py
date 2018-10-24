@@ -285,7 +285,7 @@ class TestZone(unittest.TestCase):
         data = {"page": 1,
                 "size": 10}
         res = self.run_method.post(api, data, headers=self.super_header)
-        sql = '''select id from zone where status != 3;'''
+        sql = '''select id from zone where status not in (0,3);'''
         zone_num = self.opera_db.get_effect_row(sql)
         self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(res.json()["total"], str(zone_num), "返回的zone数量不正确")
@@ -347,7 +347,8 @@ class TestZone(unittest.TestCase):
         new_coord = {
             "longitude": 200,
             "latitude": 200,
-            "altitude": 100
+            "altitude": 100,
+            "angle":90
         }
         data.update(coord=new_coord)
         res = self.run_method.post(api, json=data, headers=self.corp_header)

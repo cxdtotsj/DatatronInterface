@@ -205,7 +205,8 @@ class PublicParam:
         '''自动生成email、mobile,返回user_header, 组织管理员 role=1<<19'''
 
         stamp = int(time.time())
-        corp_name = "随机组织名称{}".format(stamp)
+        random_num = stamp + random.randint(0, 100000)
+        corp_name = "随机组织名称{}".format(random_num)
         random_email = "rd{}@random.com".format(random.randint(100000, 999999))
         random_mobile = random.randint(10000000000, 19999999999)
         user_name = "随机生成用户"
@@ -231,7 +232,8 @@ class PublicParam:
         '''返回email、mobile、user_id, 组织管理员 role=524288'''
 
         stamp = int(time.time())
-        corp_name = "随机组织名称{}".format(stamp)
+        random_num = stamp + random.randint(0, 100000)
+        corp_name = "随机组织名称{}".format(random_num)
         random_email = "rd{}@random.com".format(random.randint(100000, 999999))
         random_mobile = random.randint(10000000000, 19999999999)
         user_name = "随机生成用户"
@@ -270,7 +272,8 @@ class PublicParam:
         """返回email、mobile、user_id, 组织管理员 role=524288"""
 
         stamp = int(time.time())
-        corp_name = "随机组织名称{}".format(stamp)
+        random_num = stamp + random.randint(0, 100000)
+        corp_name = "随机组织名称{}".format(random_num)
         random_email = "rd{}@random.com".format(random.randint(100000, 999999))
         random_mobile = random.randint(10000000000, 19999999999)
         user_name = "随机生成用户"
