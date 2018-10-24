@@ -87,14 +87,14 @@ class TestUser(unittest.TestCase, User):
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 200, res.json())
 
-        self.opera_json.check_json_value("test01_05_user", data["email"])
+        self.opera_json.check_json_value("test01_05_user", data["email"])   # 保存email至json，后续用例调用
 
     # 依赖用例 test01_05_user_create_super_email
     def test01_06_user_create_emailRepeat(self):
         '''case01_06:创建用户[RSM]--邮箱重复新增'''
 
         api = "/user/create"
-        repeat_email = self.opera_json.get_data("test01_05_user")
+        repeat_email = self.opera_json.get_data("test01_05_user")           # 获取用例test01_05_user的email
         data = {
             "email": repeat_email,
             "name": User.user_name(),
@@ -114,14 +114,14 @@ class TestUser(unittest.TestCase, User):
         res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 200, res.json())
 
-        self.opera_json.check_json_value("test01_07_user", data["mobile"])
+        self.opera_json.check_json_value("test01_07_user", data["mobile"])      # 保存mobile至json
 
     # 依赖用例 test01_07_user_create_super_mobile
     def test01_08_user_create_mobileRepeat(self):
         '''case01_08:创建用户[RSM]--手机重复新增'''
 
         api = "/user/create"
-        repeat_mobile = self.opera_json.get_data("test01_07_user")
+        repeat_mobile = self.opera_json.get_data("test01_07_user")              # 获取test01_07_user的mobile
         data = {
             "mobile": repeat_mobile,
             "name": User.user_name(),
