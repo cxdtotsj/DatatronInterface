@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from base.base_method import BaseMethod
-from util.operation_json import OperetionJson
+from util.operation_db import OperationDB
 import random
 import time
 
@@ -16,7 +16,7 @@ class PublicParam:
     def __init__(self):
         self.run_method = BaseMethod()
         self.super_token = self.get_super_token()
-        self.opera_json = OperetionJson()
+        self.opera_db = OperationDB()
 
     # 获取超级管理员(1 << 30) token
     def get_super_token(self):
@@ -82,6 +82,26 @@ class PublicParam:
     # 获取request_id
     def get_request_id(self, res):
         return "X-Request-Id : %s" % res.headers["X-Request-Id"]
+ 
+    def stamp_random_CEM(self):
+        """时间戳和随机数生成 corp_name、random_email、random_mobile、zone_name、building_name"""
+        time.sleep(2)
+        stamp = int(time.time())
+
+        corp_name = "随机组织名称{}".format(stamp)
+        random_email = "rd{}@random.com".format(stamp)
+        random_mobile = random.randint(10000000000, 19999999999)
+        zone_name = "随机园区名称{}".format(stamp)
+        building_name = "随机建筑名称{}".format(stamp)
+        sql = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
+        sql_mobile = self.opera_db.get_fetchone(sql)
+        # 判断随机生成的 mobile 是否已存在
+        while sql_mobile is not None:
+            random_mobile = random.randint(10000000000, 19999999999)
+            sql = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
+            sql_mobile = self.opera_db.get_fetchone(sql)
+        return corp_name,random_email,random_mobile,zone_name,building_name
+
 
     # 创建用户
     def create_user(self, user_name, passwd, email=None, mobile=None):
@@ -108,8 +128,7 @@ class PublicParam:
         if corp_name is not None:
             corp_name = corp_name
         else:
-            stamp = int(time.time())
-            corp_name = "随机组织名称{}".format(stamp)
+            corp_name,*__ = self.stamp_random_CEM()
         data = {"name": corp_name}
         try:
             res = self.run_method.post(
@@ -204,11 +223,7 @@ class PublicParam:
     def common_user(self, corp_id=None, role=None):
         '''自动生成email、mobile,返回user_header, 组织管理员 role=1<<19'''
 
-        stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100000)
-        corp_name = "随机组织名称{}".format(random_num)
-        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
-        random_mobile = random.randint(10000000000, 19999999999)
+        corp_name,random_email,random_mobile,*__ = self.stamp_random_CEM()
         user_name = "随机生成用户"
         oldpasswd = "123456"
         newpasswd = "12345678"
@@ -231,11 +246,7 @@ class PublicParam:
     def user_reset_corp(self, corp_id=None, role=None):
         '''返回email、mobile、user_id, 组织管理员 role=524288'''
 
-        stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100000)
-        corp_name = "随机组织名称{}".format(random_num)
-        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
-        random_mobile = random.randint(10000000000, 19999999999)
+        corp_name,random_email,random_mobile,*__ = self.stamp_random_CEM()
         user_name = "随机生成用户"
         oldpasswd = "123456"
         newpasswd = "12345678"
@@ -255,8 +266,7 @@ class PublicParam:
     def user_reset(self):
         '''返回email、mobile、user_id'''
 
-        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
-        random_mobile = random.randint(10000000000, 19999999999)
+        __,random_email,random_mobile,*__ = self.stamp_random_CEM()
         user_name = "随机生成用户"
         oldpasswd = "123456"
         newpasswd = "12345678"
@@ -271,11 +281,7 @@ class PublicParam:
     def user_corp(self,corp_id=None,role=None):
         """返回email、mobile、user_id, 组织管理员 role=524288"""
 
-        stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100000)
-        corp_name = "随机组织名称{}".format(random_num)
-        random_email = "rd{}@random.com".format(random.randint(100000, 999999))
-        random_mobile = random.randint(10000000000, 19999999999)
+        corp_name,random_email,random_mobile,*__ = self.stamp_random_CEM()
         user_name = "随机生成用户"
         oldpasswd = "123456"
         if corp_id is not None:
@@ -292,8 +298,7 @@ class PublicParam:
     # 园区 id
     def create_zone(self, header=None):
         api = '/zone/create'
-        random_num = int(time.time()) + random.randint(0, 100000)
-        zone_name = "随机园区名称{}".format(random_num)
+        *__,zone_name,__ = self.stamp_random_CEM()
         data = {
             "name": zone_name,
             "area": 100,
@@ -326,10 +331,10 @@ class PublicParam:
     def create_building(self, zone_id=None, header=None, is_belong_zone=True):
         '''返回建筑ID'''
         api = '/building/create'
-        random_num = int(time.time()) + random.randint(0, 100000)
-        zone_name = "随机建筑名称{}".format(random_num)
+        *__,building_name,__ = self.stamp_random_CEM()
+
         data = {
-            "name": zone_name,
+            "name": building_name,
             "loc": {
                 "province": "上海市",
                 "city": "上海市",
@@ -397,5 +402,5 @@ if __name__ == "__main__":
     # user_header = basedata.user_header(12345678,email='rd371316@random.com')
     # print(user_header)
 
-    basedata.user_corp_del('112378848313619500',corp_id='109777231634510875')
-    # print(data1)
+    header = basedata.common_user()
+    print(header)

@@ -25,7 +25,19 @@ class BaseMethod:
             res = "指令错误"
         return res
 
-    def post(self, api, data=None, json=None, cookies=None, headers=None):
+    def post(self, api, data=None, json=None, headers=None, cookies=None, files=None):
+        '''
+        api: 请求资源
+        data: content-type为 form 时，使用data参数
+        json: content-type为 json 时，使用data参数
+        cookies:
+        headers:
+        files:
+        '''
+        url = self.get_url.http_api_url(api)
+        return requests.post(url=url, data=data, json=json, headers=headers, cookies=cookies, files=files)
+
+    def get(self, api, data=None, json=None, headers=None, cookies=None):
         '''
         api: 请求资源
         data: content-type为 form 时，使用data参数
@@ -34,29 +46,7 @@ class BaseMethod:
         headers:
         '''
         url = self.get_url.http_api_url(api)
-        if data is not None:
-            return requests.post(url=url, data=data,cookies=cookies, headers=headers)
-        elif json is not None:
-            return requests.post(url=url, json=json, cookies=cookies, headers=headers)
-        else:
-            return requests.post(url=url,cookies=cookies, headers=headers)
-
-
-    def get(self, api, data=None, json=None, cookies=None, headers=None):
-        '''
-        api: 请求资源
-        data: content-type为 form 时，使用data参数
-        json: content-type为 json 时，使用data参数
-        cookies:
-        headers:
-        '''
-        url = self.get_url.http_api_url(api)
-        if data is not None:
-            return requests.get(url=url, params=data,cookies=cookies, headers=headers)
-        elif json is not None:
-            return requests.get(url=url, json=json, cookies=cookies, headers=headers)
-        else:
-            return requests.get(url=url,cookies=cookies, headers=headers)
+        return requests.get(url=url,params=data,json=json,headers=headers,cookies=cookies)
 
 
 if __name__ == "__main__":

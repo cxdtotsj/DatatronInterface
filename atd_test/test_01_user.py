@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.api_data import UserApiData as User
 from base.base_method import BaseMethod
-from base.public_param import PublicParam
+from data.public_param import PublicParam
 from util.operation_json import OperetionJson
 import unittest
 
