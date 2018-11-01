@@ -1,0 +1,77 @@
+@baseurl = https://dt-dev.arctron.cn/api
+@contenttype = application/x-www-form-urlencoded
+@jsonconttenttype = application/json
+
+
+# @name rsmlogin
+POST {{baseurl}}/user/login HTTP/1.1
+Content-Type: {{contenttype}}
+
+email=admin@admin
+&password=abc123
+
+@rsm_token = {{rsmlogin.response.body.token}}
+
+##########################################
+
+
+# @name rcmlogin
+POST {{baseurl}}/user/login HTTP/1.1
+Content-Type: {{contenttype}}
+
+email=xdchenadmin@admin
+&password=12345678
+
+@rcm_token = {{rcmlogin.response.body.token}}
+
+
+#########################################
+
+
+# @name createCorp
+POST {{baseurl}}/corp/create HTTP/1.1
+Authorization: {{rsm_token}}
+Content-Type: {{contenttype}}
+
+name=测试REST CLINET{{$randomInt 1 10000}}
+
+@corp_id = {{createCorp.response.body.id}}
+
+#########################################
+
+#无zone_id
+# @name createZone	
+POST {{baseurl}}/zone/create HTTP/1.1
+Authorization: {{rcm_token}}
+Content-Type: {{jsonconttenttype}}
+
+{
+	"name": "测试rest client {{$randomInt 1 10000}}",
+	"building_num":31,
+	"area":100,
+	"loc": {
+	    "province": "上海市",
+	    "city": "上海市",
+	    "county": "静安区",
+	    "addr":"恒丰路329号"
+	},
+	"coord": {
+	    "longitude": 121,
+	    "latitude": 31,
+	    "altitude": 0
+	    }
+}
+
+##########################################
+
+@zone_id = {{createZone.response.body.$.id}}
+
+# @name zoneGet
+POST {{baseurl}}/zone/get HTTP/1.1
+Authorization: {{rsm_token}}
+Content-Type: {{contenttype}}
+
+id={{zone_id}}
+
+###########################################
+

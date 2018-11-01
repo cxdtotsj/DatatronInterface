@@ -6,6 +6,11 @@ test02 : /building/get
 test03 : /building/list
 test04 : /building/update
 test05 : /building/del
+test06 : /building/model/upload
+test07 : /building/model/get
+test08 : /building/model/list
+test09 : /building/model/entityget
+test10 : model update
 
 '''
 
@@ -20,6 +25,7 @@ from util.operation_json import OperetionJson
 from util.operation_assert import OperationAssert
 from util.operation_db import OperationDB
 import unittest
+import time
 
 
 class TestBuilding(unittest.TestCase):
@@ -470,7 +476,7 @@ class TestBuilding(unittest.TestCase):
             "longitude": 200,
             "latitude": 200,
             "altitude": 100,
-            "angle":90
+            "angle": 90
         }
         data.update(coord=new_coord)
         res = self.run_method.post(api, json=data, headers=self.corp_header)
@@ -543,8 +549,8 @@ class TestBuilding(unittest.TestCase):
         self.assertNotEqual(new_data["area"], 66, "面积更新成功")
 
     @unittest.skip("存在BUG,暂时跳过")
-    def test01_12_building_update_delCorpUser(self):
-        '''case01_12:更新建筑--已删除管理员编辑建筑'''
+    def test04_11_building_update_delCorpUser(self):
+        '''case04_11:更新建筑--已删除管理员编辑建筑'''
 
         api = '/building/update'
         building_id = self.opera_json.get_data("test01_09_building")["id"]
@@ -627,8 +633,8 @@ class TestBuilding(unittest.TestCase):
         self.assertNotEqual(new_data["status"], 3, "其他组织管理员删除建筑成功")
 
     @unittest.skip("存在BUG,暂时跳过")
-    def test06_06_building_del_delCorpUser(self):
-        '''case06_06:删除建筑--已删除管理员删除建筑'''
+    def test05_06_building_del_delCorpUser(self):
+        '''case05_06:删除建筑--已删除管理员删除建筑'''
 
         api = '/building/del'
         building_id = self.pub_param.create_building(header=self.corp_header)
@@ -648,3 +654,383 @@ class TestBuilding(unittest.TestCase):
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, "普通用户删除园区成功")
         self.assertNotEqual(new_data["status"], 3, "普通用户删除建筑成功")
+
+    def test06_01_building_model_upload_noBuildingId(self):
+        """case06_01:上传建筑模型[RCM]--无建筑ID"""
+
+        api = '/building/model/upload'
+        data = {
+            "building_id": None,
+            "mt": "T"
+        }
+        with open(Building.file_LangChaV2, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, "错误码返回错误")
+
+    def test06_02_building_model_upload_errBuildingId(self):
+        """case06_02:上传建筑模型[RCM]--错误的建筑ID"""
+
+        api = '/building/model/upload'
+        data = {
+            "building_id": "112233",
+            "model_type": "T"
+        }
+        with open(Building.file_LangChaV2, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1404, "错误码返回错误")
+
+    def test06_03_building_model_upload_noModelType(self):
+        """case06_03:上传建筑模型[RCM]--无建筑物类型"""
+
+        api = '/building/model/upload'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        data = {
+            "building_id": building_id
+        }
+        with open(Building.file_LangChaV2, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertNotIn("err", res.json(), res.json())
+
+    def test06_04_building_model_upload_errModelType(self):
+        """case06_04:上传建筑模型[RCM]--错误的建筑物类型"""
+
+        api = '/building/model/upload'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        data = {
+            "building_id": building_id,
+            "model_type": "ZSS"
+        }
+        with open(Building.file_LangChaV2, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, "错误码返回错误")
+
+    def test06_05_building_model_upload_noFile(self):
+        """case06_05:上传建筑模型[RCM]--无模型文件"""
+
+        api = '/building/model/upload'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        data = {
+            "building_id": building_id,
+            "model_type": "T"
+        }
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1000, "错误码返回错误")
+
+    def test06_06_building_model_upload_doubleType(self):
+        """case06_06:上传建筑模型[RCM]--上传类型T、A,验证data.json未被覆盖"""
+
+        # 上传全类型 T 的模型文件
+        res_t,building_id = self.pub_param.building_model_upload(header=self.corp_header)
+        metaUrl_t = res_t["meta_url"]
+        guid_t_one = self.pub_param.get_guid(metaUrl_t)
+        # 上传类型 A 的模型文件
+        res_b,__ = self.pub_param.building_model_upload(building_id,self.corp_header,'B','LangChaV2.objr')
+        guid_t_two = self.pub_param.get_guid(metaUrl_t) # 再次获取类型T的guid
+        metaUrl_b = res_b["meta_url"]
+        guid_b = self.pub_param.get_guid(metaUrl_b)     # 获取类型B的guid
+        self.assertEqual(guid_t_one,guid_t_two,"上传其他类型模型后，T类型的data被覆盖")
+        self.assertNotEqual(guid_t_two,guid_b,"上传其他类型模型后，T类型被B类型覆盖")
+        
+    def test06_07_building_model_upload_rsm(self):
+        """case06_07:上传建筑模型[RSM]--RSM上传建筑模型"""
+
+        api = '/building/model/upload'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        data = {
+            "building_id": building_id,
+            "model_type": "T"
+        }
+        with open(Building.file_Office, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=self.super_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, res.json())
+
+    def test06_08_building_model_upload_noRole(self):
+        """case06_08:上传建筑模型[普通用户]--普通用户上传建筑模型"""
+
+        api = '/building/model/upload'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        common_user_header = self.pub_param.common_user(corp_id=self.corp_id)
+        data = {
+            "building_id": building_id,
+            "model_type": "T"
+        }
+        with open(Building.file_Office, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=common_user_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, res.json())
+
+    def test06_09_building_model_upload_OtherCorp(self):
+        """case06_09:上传建筑模型[RCM]--RCM上传其他组织的建筑模型"""
+
+        api = '/building/model/upload'
+        building_id = self.pub_param.create_building()
+        data = {
+            "building_id": building_id,
+            "model_type": "T"
+        }
+        with open(Building.file_Office, 'rb') as fileop:
+            files = {"file": fileop}
+            res = self.run_method.post(
+                api, data, files=files, headers=self.corp_header)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1403, res.json())
+
+    def test07_01_building_model_get_noBuildingId(self):
+        """case07_01:获取模型关联信息[RCM]--无建筑ID"""
+
+        api = '/building/model/get'
+        data = {
+            "building_id": None,
+            "model_type": "T"
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
+
+    def test07_02_building_model_get_errBuildingId(self):
+        """case07_02:获取模型关联信息[RCM]--错误的建筑ID"""
+
+        api = '/building/model/get'
+        data = {
+            "building_id": "112233",
+            "model_type": "T"
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1000, res.json())
+
+    def test07_03_building_model_get_noModelType(self):
+        """case07_03:获取模型关联信息[RCM]--无模型类型"""
+
+        api = '/building/model/get'
+        r, building_id = self.pub_param.building_model_upload(
+            header=self.corp_header)
+        data = {
+            "building_id": building_id,
+            "model_type": None
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
+
+        self.opera_json.check_json_value("test07_03_building",
+                                         {"building_id": building_id,
+                                             "model_id": r["model_id"]})
+
+    # 依赖用例 test07_03_building
+    def test07_04_building_model_get_errModelType(self):
+        """case07_04:获取模型关联信息[RCM]--错误的模型类型"""
+
+        api = '/building/model/get'
+        building_id = self.opera_json.get_data(
+            "test07_03_building")["building_id"]
+        data = {
+            "building_id": building_id,
+            "model_type": "SCC"
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1000, res.json())
+
+    def test07_05_building_model_get_success(self):
+        """case07_05:获取模型关联信息[RCM]--查询成功"""
+
+        api = '/building/model/get'
+        building_id, model_id = self.opera_json.get_data(
+            "test07_03_building").values()
+        data = {
+            "building_id": building_id,
+            "model_type": "T"
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.json()["id"], model_id, res.json())
+
+    def test08_01_building_model_list_noBuildingId(self):
+        """case08_01:特定建筑模型列表--无建筑ID"""
+
+        api = '/building/model/list'
+        data = {
+            "building_id": None
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.json()["total"], "0", res.json())
+
+    def test08_02_building_model_list_errBuildingId(self):
+        """case08_02:特定建筑模型列表--错误的建筑ID"""
+
+        api = '/building/model/list'
+        data = {
+            "building_id": "112233"
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.json()["total"], "0", res.json())
+
+    def test08_03_building_model_list_success(self):
+        """case08_03:特定建筑模型列表--查询成功"""
+
+        api = '/building/model/list'
+        r,building_id = self.pub_param.building_model_upload(header=self.corp_header)
+        self.pub_param.get_guid(r["meta_url"])
+        data = {
+            "building_id": building_id
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.opera_assert.is_list_in(building_id,res.json()["data_list"],"building_id")
+    
+    def test08_04_building_model_list_sorted(self):
+        """case08_04:特定建筑模型列表--按类型顺序排序"""
+
+        api = '/building/model/list'
+        building_id = self.pub_param.create_building(header=self.corp_header)
+        for model_type in Building.modeltype_list:
+            self.pub_param.building_model_upload(building_id,self.corp_header,model_type)
+            time.sleep(1)
+        data = {
+            "building_id":building_id
+        }
+        res = self.run_method.post(api,data)
+        mt_sorted = Building.modelType_sorted() # 已排好序的model_type
+        self.assertEqual(res.status_code, 200, res.json())
+        self.opera_assert.is_equal_sorted(mt_sorted,res.json()["data_list"],"model_type")
+
+
+    def test09_01_building_model_entityget_noModelId(self):
+        """case09_01:获取构件信息--无模型ID"""
+
+        api = '/building/model/entityget'
+        r, building_id = self.pub_param.building_model_upload(
+            header=self.corp_header)
+        meta_url, model_id = r["meta_url"], r["model_id"]
+        guid = self.pub_param.get_guid(meta_url)
+        data = {
+            "model_id": None,
+            "guid": guid
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
+
+        self.opera_json.check_json_value("test09_01_building",
+                                         {"building_id": building_id,
+                                             "model_id": model_id,
+                                             "guid": guid})
+
+    # 依赖用例 test09_01_building
+    def test09_02_building_model_entityget_errModelId(self):
+        """case09_02:获取构件信息--错误的模型ID"""
+
+        api = '/building/model/entityget'
+        guid = self.opera_json.get_data("test09_01_building")["guid"]
+        data = {
+            "model_id": "112233",
+            "guid": guid
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1000, res.json())
+
+    def test09_03_building_model_entityget_noGuId(self):
+        """case09_03:获取构件信息--无构件ID"""
+
+        api = '/building/model/entityget'
+        model_id = self.opera_json.get_data("test09_01_building")["model_id"]
+        data = {
+            "model_id": model_id,
+            "guid": None
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
+
+    def test09_04_building_model_entityget_errGuId(self):
+        """case09_04:获取构件信息--错误的构件ID"""
+
+        api = '/building/model/entityget'
+        model_id = self.opera_json.get_data("test09_01_building")["model_id"]
+        data = {
+            "model_id": model_id,
+            "guid": "abc123"
+        }
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 400, res.json())
+        self.assertEqual(res.json()["code"], 1400, res.json())
+
+    def test09_05_building_model_entityget_success(self):
+        """case09_05:获取构件信息--查询成功"""
+
+        api = '/building/model/entityget'
+        __, model_id, guid = self.opera_json.get_data(
+            "test09_01_building").values()
+        data = {
+            "model_id": model_id,
+            "guid": guid}
+        res = self.run_method.post(api, data)
+        self.assertEqual(res.status_code, 200, res.json())
+
+    def test10_01_building_model_upload_update(self):
+        """case10_01:上传建筑模型[RCM]--更新建筑模型"""
+
+        # 获取更新前的 model_name
+        __, building_id = self.pub_param.building_model_upload(
+            header=self.corp_header)
+        sql = '''select model_name from building_model 
+                    where building_id={} and model_type='T';'''.format(building_id)
+        old_modelName = self.opera_db.get_fetchone(sql)["model_name"]
+        self.pub_param.building_model_upload(
+            building_id=building_id, header=self.corp_header, filename='LangChaV2.objr')
+        new_modelName = self.opera_db.get_fetchone(sql)["model_name"]
+
+        self.assertNotEqual(old_modelName, new_modelName, "更新文件未成功")
+
+    def test10_02_building_model_get_update(self):
+        """case10_02:获得模型关联信息[RCM]--获取更新后的model_id"""
+
+        # 获取更新前的 model_id
+        __, building_id = self.pub_param.building_model_upload(
+            header=self.corp_header)
+        sql = '''select id from building_model 
+                    where building_id={} and model_type='T';'''.format(building_id)
+        old_id = self.opera_db.get_fetchone(sql)["id"]
+        self.pub_param.building_model_upload(
+            building_id=building_id, header=self.corp_header, filename='LangChaV2.objr')
+        new_id = self.opera_db.get_fetchone(sql)["id"]
+
+        self.assertNotEqual(old_id, new_id, "model_id未更新")
+
+    def test10_03_building_model_model_entityget_update(self):
+        """case10_03:获取构件信息[RCM]--获取更新后的构件信息"""
+
+        # 获取更新前的building_id model_id guid
+        old_res,building_id = self.pub_param.building_model_upload(header=self.corp_header)
+        old_metaUrl = old_res["meta_url"]
+        old_guid = self.pub_param.get_guid(old_metaUrl)
+        # 更新 model
+        new_res,__ = self.pub_param.building_model_upload(
+            building_id=building_id, header=self.corp_header, filename='LangChaV2.objr')
+        new_metaUrl = new_res["meta_url"]
+        entities = self.pub_param.get_update_entities(new_metaUrl,old_guid)
+        self.assertNotIn(old_guid,[i["Guid"] for i in entities],"Guid未更新")
+
+        

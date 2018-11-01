@@ -9,7 +9,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 from base.base_method import BaseMethod
 from util.operation_json import OperetionJson
-from base.public_param import PublicParam
+from data.public_param import PublicParam
 
 
 class InitTest:

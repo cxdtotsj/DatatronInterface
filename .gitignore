@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
 # C extensions
 *.so
 
@@ -110,3 +111,4 @@ venv.bak/
 .dmypy.json
 dmypy.json
 .idea
+dataconfig/

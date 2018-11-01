@@ -78,19 +78,23 @@ class OperationAssert:
         res_dict_list = [i[receive_key] for i in receive_list]
         assert except_list == res_dict_list,"两个列表不相等"
 
-    def is_list_in(self,except_value,receive_list,receive_key):
+    # 和 is_equal_value 一致，后面全部使用这个
+    def is_list_in(self,except_value,receive_list,receive_key): 
         '''receive_list 为一个存储 字典 的列表，判断except_value等于 receive_list字典中的某个key的value值'''
 
         res_dict_list = [i[receive_key] for i in receive_list]
         for each in res_dict_list:
             assert each == except_value,"返回的值不都为{}".format(except_value)
 
+    def is_equal_sorted(self,except_list,receive_list,receive_key):
+        '''receive_list 为一个存储 dict 的列表，判断 except_list 的元素顺序和 res_dict_list 一致'''
+        res_dict_list = [i[receive_key] for i in receive_list]
+        if len(except_list) == len(res_dict_list):
+            for i in range(len(except_list)):
+                assert except_list[i] == res_dict_list[i],"返回的顺序不正确:{}".format(res_dict_list)
 
 
 
 
 if __name__ == "__main__":
     assert_result = OperationAssert()
-    a = [{'id': '112211683572724267', 'mobile': '', 'email': '',
-'name': '', 'password': '', 'salt': '', 'status': 0, 'role': '0', 'modify_by': '', 'create_at': '0', 'update_at': '0'}, {'id': '112211683925045803', 'mobile': '', 'email': '', 'name': '', 'password': '', 'salt': '', 'status': 0, 'role': '0', 'modify_by': '', 'create_at': '0', 'update_at': '0'}]
-    assert_result.is_list_equal(["112211683572724267","112211683925045803"],a,receive_key="id")

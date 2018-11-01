@@ -9,6 +9,7 @@ from base.base_method import BaseMethod
 from util.operation_db import OperationDB
 import random
 import time
+import requests
 
 
 class PublicParam:
@@ -101,6 +102,19 @@ class PublicParam:
             sql = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
             sql_mobile = self.opera_db.get_fetchone(sql)
         return corp_name,random_email,random_mobile,zone_name,building_name
+
+    def random_name(self,name,num=None):
+        """num=None,return random_name;
+           num=int,return []
+        """
+        time.sleep(2)
+        stamp = int(time.time())
+
+        if num is None:
+            random_name = '{}{}'.format(name,stamp)
+        else:
+            random_name = ['{}-{}{}'.format(i,name,stamp) for i in range(num)]
+        return random_name
 
 
     # 创建用户
@@ -390,17 +404,89 @@ class PublicParam:
             return res.json()
         except:
             print("获取建筑详细信息失败")
+    
+    # 创建building，并上传模型
+    def building_model_upload(self,building_id=None,header=None,model_type=None,filename=None):
+        "return r.json(),building_id"
 
+        if building_id is not None:
+            building_id = building_id
+        else:
+            building_id = self.create_building(header=header)
+        if model_type is not None:
+            model_type=model_type
+        else:
+            model_type = "T"
+        if filename is not None:
+            filename=filename
+        else:
+            filename = 'Office.objr'
+        api = "/building/model/upload"
+        path_file = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig',filename)
+        data = {
+                "building_id" :building_id,
+                "model_type":model_type
+            }
+        with open(path_file,'rb') as fileop:
+            files = {"file":fileop}
+            r = self.run_method.post(api,data=data,files=files,headers=header)
+        try:
+            if "err" in r.json():
+                print("创建building并上传模型返回error")
+            return r.json(),building_id
+        except ValueError:
+            print("创建building并上传模型失败")
 
+    # 获取meta_url页面构件的GUID
+    def get_guid(self,meta_url):
+        """输入 meta_url,返回 guid"""
+        for i in range(6):
+            r = requests.get(meta_url)
+            if r.status_code == 200:
+                break
+            else:
+                time.sleep(5)
+        try:
+            guid = r.json()["Entities"][0]["Guid"]
+        except ValueError:
+            guid = None
+        return guid
+
+    # 获取更新后的meta_url 页面返回的更新后的 Entities
+    def get_update_entities(self,meta_url,old_guid):
+        """输入 meta_url，未更新前的 old_guid,返回 entities"""
+        for i in range(6):
+            guid = self.get_guid(meta_url)  # 获取新的guid
+            if guid == old_guid:            # 更新完成前，guid仍是原来的
+                time.sleep(5)
+            else:
+                break
+        try:
+            entities = requests.get(meta_url).json()["Entities"]
+        except ValueError:
+            entities = None
+        return entities
+    
+    # 获取构件信息
+    def get_entity(self,model_id,guid):
+        """return entity.json()"""
+        api = 'building/model/entityget'
+        data = {
+            "model_id":model_id,
+            "guid":guid
+        }
+        try:
+            entity = self.run_method.post(api,data)
+            entity.raise_for_status()
+            return entity.json()
+        except:
+            print("获取构建信息超时")
+            print(entity.json())
+        
 if __name__ == "__main__":
     import time
-    import requests
-    # 111656884594815531
-    basedata = PublicParam()
-    # data1 = basedata.user_reset_corp(corp_id="109777231634510875",role=1<<19)
-
-    # user_header = basedata.user_header(12345678,email='rd371316@random.com')
-    # print(user_header)
-
-    header = basedata.common_user()
-    print(header)
+    bd = PublicParam()
+    name_1 = bd.random_name("自动化")
+    print(name_1)
+    can1,can2,can3 = bd.random_name("参数化",3)
+    print(can1,can2,can3)

@@ -4,6 +4,7 @@
 import datetime
 import time
 import random
+import os
 
 
 class UserApiData:
@@ -96,9 +97,33 @@ class BuildingApiData:
         }
         return data
 
+    file_LangChaV2 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','LangChaV2.objr')
+    file_Office = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','Office.objr')
+
+    modeltype_list = ['T','B','A']
+
+    @classmethod
+    def modelType_sorted(self):
+        """返回已排序的 model_type"""
+        modelType_list = ['B','A']
+        modelType_list.sort()
+        modelType_list.insert(0,'T')
+        return modelType_list
+
+
+
+
+class ThingsApiData:
+    
+    @classmethod
+    def device_name(self):
+        stamp = int(time.time())
+        random_num = stamp + random.randint(0, 100000)
+        device_name = 'Auto设备名称{}'.format(random_num)
+        return device_name
+
+
 
 if __name__ == '__main__':
     # a = BuildingApiData()
-    print(BuildingApiData.building_data()["name"])
-    print(type(BuildingApiData.building_data()))
-    print(BuildingApiData.building_data()["name"])
+    print(BuildingApiData.modelType_sorted())

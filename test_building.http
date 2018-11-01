@@ -1,0 +1,9 @@
+@baseurl = https://dt-dev.arctron.cn/api
+@contenttype = application/x-www-form-urlencoded
+@jsonconttenttype = application/json
+
+POST {{baseurl}}//building/model/entityget HTTP/1.1
+Content-Type: {{contenttype}}
+
+model_id=114529519699768355
+&guid=282f4ade-cbbd-4523-9f11-e380faf83fb7-0004d2eb
