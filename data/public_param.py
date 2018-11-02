@@ -310,25 +310,28 @@ class PublicParam:
 
 
     # 园区 id
-    def create_zone(self, header=None):
+    def create_zone(self, header=None,data=None):
         api = '/zone/create'
-        *__,zone_name,__ = self.stamp_random_CEM()
-        data = {
-            "name": zone_name,
-            "area": 100,
-            "building_num": 19,
-            "loc": {
-                "province": "上海市",
-                "city": "上海市",
-                "county": "静安区",
-                "addr": "恒丰路329号"
-            },
-            "coord": {
-                "longitude": 121,
-                "latitude": 31,
-                "altitude": 0
+        if data is not None:
+            data = data
+        else:
+            *__,zone_name,__ = self.stamp_random_CEM()
+            data = {
+                "name": zone_name,
+                "area": 1000,
+                "building_num": 19,
+                "loc": {
+                    "province": "上海市",
+                    "city": "上海市",
+                    "county": "静安区",
+                    "addr": "恒丰路329号"
+                },
+                "coord": {
+                    "longitude": 121,
+                    "latitude": 31,
+                    "altitude": 0
+                }
             }
-        }
         if header is not None:
             user_header = header
         else:
