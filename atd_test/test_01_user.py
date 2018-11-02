@@ -26,7 +26,7 @@ super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
 
 
-class TestUser(unittest.TestCase, User):
+class TestUserCreate(unittest.TestCase, User):
 
     def test01_user_create_noName(self):
         '''case01:创建用户[RSM]--缺少用户名 '''

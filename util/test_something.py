@@ -141,3 +141,17 @@ import os
 #         text = coll.text
 #         texts.append(text)
 #     assert except_value in texts,"this is  except_value : ...{}...,\n this is texts : ...{}...".format(except_value,texts)
+
+
+test_id = 123
+
+class testAr:
+
+    def testar(self):
+
+        test_id = 456
+        print(test_id)
+
+if __name__ == '__main__':
+    ar = testAr()
+    ar.testar()
