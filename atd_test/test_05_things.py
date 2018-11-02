@@ -23,26 +23,26 @@ class TestThings(unittest.TestCase):
         cls.opera_db = OperationDB()
         cls.super_header = cls.pub_param.get_super_header()
         cls.corp_header, cls.corp_id = cls.pub_param.get_corp_user()
-    
+
     def test01_01_things_add_noName(self):
         """case01_01:设备添加[RCM]--无设备名称"""
-        
+
         api = '/things/add'
         data = {
-            "device_name":None
+            "device_name": None
         }
-        res = self.run_method.post(api,data,headers=self.corp_header)
+        res = self.run_method.post(api, data, headers=self.corp_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
-    
+
     def test01_02_things_add_noToken(self):
         """case01_02:设备添加[RCM]--无Auth"""
 
         api = '/things/add'
         data = {
-            "device_name":Things.device_name()
+            "device_name": Things.device_name()
         }
-        res = self.run_method.post(api,data)
+        res = self.run_method.post(api, data)
         self.assertEqual(res.status_code, 401, res.json())
         self.assertEqual(res.json()["code"], 1401, res.json())
 
@@ -51,28 +51,79 @@ class TestThings(unittest.TestCase):
 
         api = '/things/add'
         data = {
-            "device_name":Things.device_name()
+            "device_name": Things.device_name()
         }
-        res = self.run_method.post(api,data,headers=self.super_header)
+        res = self.run_method.post(api, data, headers=self.super_header)
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, res.json())
 
     def test01_04_things_add_noRole(self):
         """case01_04:设备添加[普通用户]--普通用户新增"""
-        pass
+
+        api = '/things/add'
+        data = {
+            "device_name": Things.device_name()
+        }
+        common_user_header = self.pub_param.common_user(corp_id=self.corp_id)
+        res = self.run_method.post(api, data, headers=common_user_header)
+        self.assertEqual(res.status_code, 403, res.json())
+        self.assertEqual(res.json()["code"], 1403, res.json())
 
     def test01_05_things_add_rcm(self):
         """case01_05:设备添加[RCM]--RCM新增"""
-        pass
+
+        api = '/things/add'
+        data = {
+            "device_name": Things.device_name()
+        }
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertIsNotNone(res.json()["id"], res.json())
 
     def test01_06_things_add_default_deviceType(self):
         """case01_06:设备添加[RCM]--默认的设备类型"""
-        pass
+
+        api = '/things/add'
+        data = {
+            "device_name": Things.device_name()
+        }
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        sql = '''select device_type from thingsv2 
+                    where id = "{}";'''.format(res.json()["id"])
+        device_type = self.opera_db.get_fetchone(sql)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(device_type["device_type"],
+                         0, "数据库结果:{}".format(device_type))
 
     def test01_07_things_add_design_deviceType(self):
         """case01_07:设备添加[RCM]--指定的设备类型"""
-        pass
+
+        api = '/things/add'
+        data = {
+            "device_name": Things.device_name(),
+            "device_type": "TYPE_GATEWAY"
+        }
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        sql = '''select device_type from thingsv2 
+                    where id = "{}";'''.format(res.json()["id"])
+        device_type = self.opera_db.get_fetchone(sql)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(device_type["device_type"],
+                         1, "数据库结果:{}".format(device_type))
 
     def test01_08_things_add_design_success(self):
         """case01_08:设备添加[RCM]--全字段"""
-        pass
+
+        api = '/things/add'
+        data = {
+            "device_name": Things.device_name(),
+            "device_type": "TYPE_GATEWAY",
+            "device_desc": "设备说明"
+        }
+        res = self.run_method.post(api, data, headers=self.corp_header)
+        sql = '''select device_desc from thingsv2 
+                    where id = "{}";'''.format(res.json()["id"])
+        device_desc = self.opera_db.get_fetchone(sql)
+        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(
+            device_desc["device_desc"], data["device_desc"], "数据库结果:{}".format(device_desc))
