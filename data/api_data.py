@@ -100,19 +100,17 @@ class BuildingApiData:
     file_LangChaV2 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','LangChaV2.objr')
     file_Office = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','Office.objr')
 
-    modeltype_list = ['T','S','A','M','E','P','F','C','B']
-    # modeltype_list = ['T','S','A']
+    # modeltype_list = ['T','S','A','M','E','P','F','C','B']
+    modeltype_list = ['T','S','A']
 
     @classmethod
     def modelType_sorted(self):
         """返回已排序的 model_type"""
-        # modelType_list = ['S','A']
-        modelType_list = ['T','S','A','M','E','P','F','C','B']
+        modelType_list = ['S','A']
+        # modelType_list = ['T','S','A','M','E','P','F','C','B']
         modelType_list.sort()
         modelType_list.insert(0,'T')
         return modelType_list
-
-
 
 
 class ThingsApiData:

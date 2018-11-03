@@ -33,50 +33,45 @@ corp_header, corp_id = pub_param.get_corp_user()
 
 class TestCorpCreate(unittest.TestCase, Corp):
 
+    def setUp(self):
+        self.api = "/corp/create"
+        self.data = {"name": Corp.corp_name()}
+
     def test01_corp_create_noName(self):
         '''case01:创建组--name为空'''
 
-        api = "/corp/create"
-        data = {"name": None}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.update(name=None)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test02_corp_create_noToken(self):
         '''case02:创建组--无token'''
 
-        api = "/corp/create"
-        data = {"name": Corp.corp_name()}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, self.data)
         self.assertEqual(res.status_code, 401, res.json())
         self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test03_corp_create_noRole(self):
         '''case03[普通用户]:创建组--未授权'''
 
-        api = "/corp/create"
-        data = {"name": Corp.corp_name()}
         common_user_header = pub_param.common_user()
-        res = run_method.post(api, data, common_user_header)
+        res = run_method.post(self.api, self.data, common_user_header)
         self.assertEqual(res.status_code, 401, res.json())
         self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test04_corp_create_noRole(self):
         '''case04:创建组[RCM]--未授权'''
 
-        api = "/corp/create"
-        data = {"name": Corp.corp_name()}
         rcm_user_header = pub_param.common_user(role=1 << 19)
-        res = run_method.post(api, data, rcm_user_header)
+        res = run_method.post(self.api, self.data, rcm_user_header)
         self.assertEqual(res.status_code, 401, res.json())
         self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test05_corp_create_success(self):
         '''case05:创建组[RSM]--标准输入'''
 
-        api = "/corp/create"
-        data = {"name": Corp.corp_name()}
-        res = run_method.post(api, data, headers=super_header)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 200, res.json())
         self.assertNotEqual(res.json()["id"], '', "新增的组织未返回ID")
 

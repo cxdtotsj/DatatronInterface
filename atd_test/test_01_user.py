@@ -28,104 +28,80 @@ corp_header, corp_id = pub_param.get_corp_user()
 
 class TestUserCreate(unittest.TestCase, User):
 
+    def setUp(self):
+        self.api = "/user/create"
+        self.data = {
+            "email": User.user_email(),
+            "name": User.user_name(),
+            "password": "123456"}
+
     def test01_user_create_noName(self):
         '''case01:创建用户[RSM]--缺少用户名 '''
 
-        api = "/user/create"
-        data = {
-            "eamil": User.user_email(),
-            "name": None,
-            "password": "123456"}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.update(name=None)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test02_user_create_noPasswd(self):
         '''case02:创建用户[RSM]--缺少密码'''
 
-        api = "/user/create"
-        data = {
-            "eamil": User.user_email(),
-            "name": "test04",
-            "password": None}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.update(password=None)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test03_user_create_noToken(self):
         '''case03:创建用户[RSM]--无token'''
 
-        api = "/user/create"
-        data = {
-            "eamil": User.user_email(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, self.data)
         self.assertEqual(res.status_code, 401, res.json())
         self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test04_user_create_noEAM(self):
         '''case04:创建用户[RSM]--无手机号和邮箱'''
 
-        api = "/user/create"
-        data = {
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.pop("email")
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test05_user_create_super_email(self):
         '''case05:创建用户[RSM]--超管邮箱新增'''
 
-        api = "/user/create"
-        data = {
-            "email": User.user_email(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=super_header)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 200, res.json())
 
-        opera_json.check_json_value("test05_user_create", data["email"])   # 保存email至json，后续用例调用
+        opera_json.check_json_value("test05_user_create", self.data["email"])   # 保存email至json，后续用例调用
 
     # 依赖用例 test05_user_create
     def test06_user_create_emailRepeat(self):
         '''case06:创建用户[RSM]--邮箱重复新增'''
 
-        api = "/user/create"
         repeat_email = opera_json.get_data("test05_user_create")  # 获取用例test05_user_create的email
-        data = {
-            "email": repeat_email,
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.update(email=repeat_email)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1409, res.json())
 
     def test07_user_create_super_mobile(self):
         '''case07:创建用户[RSM]--超管手机新增'''
 
-        api = "/user/create"
-        data = {
-            "mobile": User.user_mobile(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.pop("email")
+        self.data.update(mobile=User.user_mobile())
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 200, res.json())
 
-        opera_json.check_json_value("test07_user_create", data["mobile"])    # 保存mobile至json
+        opera_json.check_json_value("test07_user_create", self.data["mobile"])    # 保存mobile至json
 
     # 依赖用例 test07_user_create
     def test08_user_create_mobileRepeat(self):
         '''case08:创建用户[RSM]--手机重复新增'''
 
-        api = "/user/create"
+        self.data.pop("email")
         repeat_mobile = opera_json.get_data("test07_user_create")   # 获取test07_user_create的mobile
-        data = {
-            "mobile": repeat_mobile,
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=super_header)
+        self.data.update(mobile=repeat_mobile)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1409, res.json())
 
@@ -133,60 +109,44 @@ class TestUserCreate(unittest.TestCase, User):
         '''case09:创建用户[普通用户]--未授权创建用户'''
 
         common_user_header = pub_param.common_user(corp_id)
-        api = "/user/create"
-        data = {
-            "email": User.user_email(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=common_user_header)
+        res = run_method.post(self.api, self.data, headers=common_user_header)
         self.assertEqual(res.status_code, 403, res.json())
         self.assertEqual(res.json()["code"], 1403, res.json())
 
     def test10_user_create_email(self):
         '''case10:创建用户[RCM]--组管理员邮箱创建'''
 
-        api = "/user/create"
-        data = {
-            "email": User.user_email(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=corp_header)
+        res = run_method.post(self.api, self.data, headers=corp_header)
         self.assertEqual(res.status_code, 200, res.json())
 
     def test11_user_create_mobile(self):
         '''case11:创建用户[RCM]--组管理员手机创建'''
 
-        api = "/user/create"
-        data = {
-            "mobile": User.user_mobile(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=corp_header)
+        self.data.pop("email")
+        self.data.update(mobile=User.user_mobile())
+        res = run_method.post(self.api, self.data, headers=corp_header)
         self.assertEqual(res.status_code, 200, res.json())
 
     def test12_user_create_BothEM(self):
         '''case12:创建用户[RCM]--组管理员手机、邮箱同时创建'''
 
-        api = "/user/create"
-        data = {
-            "mobile": User.user_mobile(),
-            "email": User.user_email(),
-            "name": User.user_name(),
-            "password": "123456"}
-        res = run_method.post(api, data, headers=corp_header)
+        self.data.update(mobile=User.user_mobile())
+        res = run_method.post(self.api, self.data, headers=corp_header)
         self.assertEqual(res.status_code, 200, res.json())
 
 
 class TestUserList(unittest.TestCase):
 
+    def setUp(self):
+        self.api = '/user/list'
+        self.data = {
+            "page": 1,
+            "size": 20}
+
     def test01_user_list_super(self):
         '''case01:用户列表--超管查询所有用户（Size最大100）'''
 
-        api = '/user/list'
-        data = {
-            "page": 1,
-            "size": 20}
-        res = run_method.post(api, data, headers=super_header)
+        res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 200, res.json())
 
     def test02_user_list_rcm(self):
@@ -204,109 +164,104 @@ class TestUserList(unittest.TestCase):
 
 class TestUserLogin(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.api = '/user/login'
+
     def test01_user_login_noPassword(self):
         '''case01:登录接口--无password'''
 
-        api = '/user/login'
         data = {"mobile": "122121"}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
 
     def test02_user_login_errMobile(self):
         '''case02:登录接口--错误的手机号'''
 
-        api = '/user/login'
         data = {
             "mobile": "122121",
             "password": 123456}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1404, res.json())
 
     def test03_user_login_errEmail(self):
         '''case03:登录接口--错误的邮箱'''
-
-        api = '/user/login'
+ 
         data = {
             "mobile": "122121",
             "password": 123456}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1404, res.json())
 
     def test04_user_login_noPasswd(self):
         '''case04:登录接口--错误的密码'''
-
-        api = '/user/login'
+        
         user_email,*__ = pub_param.user_reset_corp(corp_id=corp_id)
         data = {
             "email": user_email,
             "password": 000000}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1401, res.json())
 
     def test05_user_login_firstLogin(self):
         '''case05:登录接口--邮箱第一次登录,未重置密码'''
-
-        api = '/user/login'
+        
         user_email,*__ = pub_param.user_corp(corp_id)
         data = {
             "email": user_email,
             "password": 123456}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1426, res.json())
 
     def test06_user_login_firstLogin(self):
         '''case06:登录接口--邮箱登录，未绑定到组织(已重置密码)'''
-
-        api = '/user/login'
+        
         user_email,*__ = pub_param.user_reset()
         pub_param.user_pwd_reset(123456, 12345678, email=user_email)
         data = {
             "email": user_email,
             "password": 12345678}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1000, res.json())
 
     def test07_user_login_email(self):
         '''case07:登录接口--邮箱登录（绑定到组织）'''
-
-        api = '/user/login'
+        
         user_email, *__ = pub_param.user_reset_corp(corp_id)
         data = {
             "email": user_email,
             "password": 12345678}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(res.json()["corp_id"], corp_id, res.json())
 
     def test08_user_login_mobile(self):
         '''case08:登录接口--手机第一次登录'''
-
-        api = '/user/login'
+        
         __, user_mobile, __ = pub_param.user_reset_corp(corp_id)
         data = {
             "mobile": user_mobile,
             "password": 12345678}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(res.json()["corp_id"], corp_id, res.json())
 
     def test09_user_login_bothME(self):
         '''case09:登录接口--同时输入手机号和邮箱'''
-
-        api = '/user/login'
+        
         user_email, user_mobile, __ = pub_param.user_reset_corp(
             corp_id)
         data = {
             "mobile": user_mobile,
             "email": user_email,
             "password": 12345678}
-        res = run_method.post(api, data)
+        res = run_method.post(self.api, data)
         self.assertEqual(res.status_code, 400, res.json())
         self.assertEqual(res.json()["code"], 1400, res.json())
 
