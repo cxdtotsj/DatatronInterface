@@ -384,6 +384,44 @@ class PublicParam:
         except:
             print("新增建筑失败")
             print(res.json())
+    
+    # 创建独栋建筑
+    def create_sign_building(self,data=None,header=None):
+        """data默认时，为独栋建筑；return 建筑 ID"""
+        api = '/building/create'
+        if data is not None:
+            data = data
+        else:
+            *__,building_name,__ = self.stamp_random_CEM()
+            data = {
+                "name": building_name,
+                "loc": {
+                    "province": "上海市",
+                    "city": "上海市",
+                    "county": "静安区",
+                    "addr": "恒丰路329号"
+                },
+                "area": 100,
+                "layer_num": 31,
+                "underlayer_num": 3,
+                "coord": {
+                    "altitude": 122,
+                    "latitude": 32,
+                    "longitude": 0
+                }
+            }
+        if header is not None:
+            user_header = header
+        else:
+            user_header = self.common_user(role=524288)
+        try:
+            res = self.run_method.post(api, json=data, headers=user_header)
+            res.raise_for_status()
+            return res.json()["id"]
+        except:
+            print("新增建筑失败")
+            print(res.json())
+
 
     # 获取园区详细信息
     def zone_get(self, zone_id, header):
