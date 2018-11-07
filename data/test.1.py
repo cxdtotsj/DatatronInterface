@@ -14,13 +14,13 @@ corp_header,corp_id = pp.get_corp_user()
 
 api = "https://dt-dev.arctron.cn/api/building/model/upload"
 
-filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','Office.objr')
+filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','XKYY_2F.objr')
 
 
 
 data = {
-        "building_id" :"114713326885286963",
-        "model_type":"M"
+        "building_id" :"115549442664313912",
+        "model_type":"T"
     }
 # files = {"file":open(filename,'rb')}
 with open(filename,'rb') as fileop:
