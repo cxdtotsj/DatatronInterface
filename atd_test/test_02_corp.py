@@ -42,37 +42,37 @@ class TestCorpCreate(unittest.TestCase, Corp):
 
         self.data.update(name=None)
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_corp_create_noToken(self):
         '''case02:创建组--无token'''
 
         res = run_method.post(self.api, self.data)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test03_corp_create_noRole(self):
         '''case03[普通用户]:创建组--未授权'''
 
         common_user_header = pub_param.common_user()
         res = run_method.post(self.api, self.data, common_user_header)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test04_corp_create_noRole(self):
         '''case04:创建组[RCM]--未授权'''
 
         rcm_user_header = pub_param.common_user(role=1 << 19)
         res = run_method.post(self.api, self.data, rcm_user_header)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test05_corp_create_success(self):
         '''case05:创建组[RSM]--标准输入'''
 
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(res.json()["id"], '', "新增的组织未返回ID")
 
 
@@ -86,8 +86,8 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": None,
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["users"][0]["id"], '', res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], '', run_method.errInfo(res))
 
     @unittest.skip("暂时未对输入的user_id做校验")
     def test02_corp_user_add_errUserId(self):
@@ -98,7 +98,7 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": None,
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     def test03_corp_user_add_noCorpId(self):
         '''case03:用户添加到组[RSM]--无组ID'''
@@ -108,8 +108,8 @@ class TestCorpUserAdd(unittest.TestCase):
         data = {
             "user_id": user_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     @unittest.skip("暂时未对输入的corp_id做校验")
     def test04_corp_user_add_errCorpId(self):
@@ -121,7 +121,7 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": user_id,
             "corp_id": "11220099"}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     def test05_corp_user_add_noToken(self):
         '''case05:用户添加到组[RSM]--无token'''
@@ -132,8 +132,8 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": user_id,
             "corp_id": corp_id}
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test06_corp_user_add_success(self):
         '''case06:用户添加到组[RSM]--添加用户成功(单个用户)'''
@@ -144,9 +144,9 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": user_id,
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
-        self.assertEqual(res.json()["users"][0]["id"], user_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], user_id, run_method.errInfo(res))
 
     def test07_corp_user_add_multiple(self):
         '''case07:用户添加到组[RSM]--添加用户成功(多个用户)'''
@@ -158,8 +158,8 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": "{},{}".format(user_one, user_two),
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         opera_assert.is_list_equal(
             [user_one, user_two], res.json()["users"], "id")
 
@@ -170,9 +170,9 @@ class TestCorpUserAdd(unittest.TestCase):
         *__, user_id = pub_param.user_reset()
         data = {"user_id": user_id}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
-        self.assertEqual(res.json()["users"][0]["id"], user_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], user_id, run_method.errInfo(res))
 
     def test09_corp_user_add_errCorpId(self):
         '''case09:用户添加到组[RCM]--传入错误组ID(管理员所在组)'''
@@ -182,9 +182,9 @@ class TestCorpUserAdd(unittest.TestCase):
         data = {"user_id": user_id,
                 "corp_id": "001199"}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
-        self.assertEqual(res.json()["users"][0]["id"], user_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], user_id, run_method.errInfo(res))
 
     def test10_corp_user_add_rcmRole(self):
         '''case10:用户添加到组[RCM]--添加组管理员权限'''
@@ -194,10 +194,10 @@ class TestCorpUserAdd(unittest.TestCase):
         data = {"user_id": user_id,
                 "role": 1 << 19}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
-        self.assertEqual(res.json()["role"], str(1 << 19), res.json())
-        self.assertEqual(res.json()["users"][0]["id"], user_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
+        self.assertEqual(res.json()["role"], str(1 << 19), run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], user_id, run_method.errInfo(res))
 
     def test11_corp_user_add_rsmRole(self):
         '''case11:用户添加到组[RCM]--添加超管权限'''
@@ -207,10 +207,10 @@ class TestCorpUserAdd(unittest.TestCase):
         data = {"user_id": user_id,
                 "role": 1 << 30}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
-        self.assertNotEqual(res.json()["role"], str(1 << 30), res.json())
-        self.assertEqual(res.json()["users"][0]["id"], user_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["role"], str(1 << 30), run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], user_id, run_method.errInfo(res))
 
     def test12_corp_user_add_noRole(self):
         '''case12:用户添加到组[普通用户]--用户在该组但无管理员权限'''
@@ -220,8 +220,8 @@ class TestCorpUserAdd(unittest.TestCase):
         common_user_header = pub_param.common_user(corp_id)
         data = {"user_id": user_id}
         res = run_method.post(api, data, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test13_corp_user_add_multiple(self):
         '''case13:用户添加到组[RCM]--添加用户成功(多个用户)'''
@@ -233,8 +233,8 @@ class TestCorpUserAdd(unittest.TestCase):
             "user_id": "{},{}".format(user_one, user_two),
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         opera_assert.is_list_equal(
             [user_one, user_two], res.json()["users"], "id")
 
@@ -250,8 +250,8 @@ class TestCorpUserList(unittest.TestCase):
             "size": 10,
             "corp_id": None}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test02_corp_user_list_errCorpId(self):
         '''case02:组内用户列表[RSM]--错误的组ID'''
@@ -262,8 +262,8 @@ class TestCorpUserList(unittest.TestCase):
             "size": 10,
             "corp_id": "112233"}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], str(0), res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], str(0), run_method.errInfo(res))
 
     def test03_corp_user_list_noToken(self):
         '''case03:组内用户列表--无token'''
@@ -274,8 +274,8 @@ class TestCorpUserList(unittest.TestCase):
             "size": 10,
             "corp_id": corp_id}
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test04_corp_user_list_success(self):
         '''case04:组内用户列表[RSM]--查看成功'''
@@ -289,8 +289,8 @@ class TestCorpUserList(unittest.TestCase):
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
             corp_id)
         user_num = opera_db.get_effect_row(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], str(user_num), res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], str(user_num), run_method.errInfo(res))
 
     def test05_corp_user_list_noCorpId(self):
         '''case05:组内用户列表[RCM]--未传组ID(管理员只在一个组)'''
@@ -303,8 +303,8 @@ class TestCorpUserList(unittest.TestCase):
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
             corp_id)
         user_num = opera_db.get_effect_row(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], str(user_num), res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], str(user_num), run_method.errInfo(res))
 
     def test06_corp_user_list_otherCorpId(self):
         '''case06:组内用户列表[RCM]--传入其他组ID'''
@@ -319,8 +319,8 @@ class TestCorpUserList(unittest.TestCase):
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
             corp_id)
         user_num = opera_db.get_effect_row(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], str(user_num), res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], str(user_num), run_method.errInfo(res))
 
     def test07_corp_user_list_commonUser(self):
         '''cas07:组内用户列表[普通用户]--普通用户查看所在组内用户'''
@@ -334,8 +334,8 @@ class TestCorpUserList(unittest.TestCase):
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
             corp_id)
         user_num = opera_db.get_effect_row(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], str(user_num), res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], str(user_num), run_method.errInfo(res))
 
 
 class TestCorpList(unittest.TestCase):
@@ -348,7 +348,7 @@ class TestCorpList(unittest.TestCase):
             "page": 1,
             "size": 10}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     def test02_corp_list_rcm_success(self):
         '''case02:组列表[RCM]--组织管理员查询成功'''
@@ -358,9 +358,9 @@ class TestCorpList(unittest.TestCase):
             "page": 1,
             "size": 10}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["data_list"][0]
-                         ["id"], corp_id, res.json())
+                         ["id"], corp_id, run_method.errInfo(res))
 
     def test03_corp_list_common_success(self):
         '''case03:组列表[普通用户]--普通用户查询成功'''
@@ -371,9 +371,9 @@ class TestCorpList(unittest.TestCase):
             "size": 10}
         common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(api, data, headers=common_user_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["data_list"][0]
-                         ["id"], corp_id, res.json())
+                         ["id"], corp_id, run_method.errInfo(res))
 
 
 class TestCorpUserDel(unittest.TestCase):
@@ -386,9 +386,9 @@ class TestCorpUserDel(unittest.TestCase):
             "user_id": None,
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
-        self.assertEqual(res.json()["users"][0]["id"], '', res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
+        self.assertEqual(res.json()["users"][0]["id"], '', run_method.errInfo(res))
 
     def test02_corp_user_del_errUserId(self):
         '''case02:用户从组删除[RSM]--错误的用户ID'''
@@ -398,10 +398,10 @@ class TestCorpUserDel(unittest.TestCase):
             "user_id": "112334",
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         self.assertEqual(res.json()["users"][0]["id"],
-                         data["user_id"], res.json())
+                         data["user_id"], run_method.errInfo(res))
 
     def test03_corp_user_del_noCorpId(self):
         '''case03:用户从组删除[RSM]--超管无组ID'''
@@ -413,8 +413,8 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}';'''.format(
             user_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], '', res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], '', run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
                          1, "无corp_id情况下user_id被删除")
 
@@ -430,7 +430,7 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}';'''.format(
             user_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
                          1, "无corp_id情况下user_id被删除")
 
@@ -443,8 +443,8 @@ class TestCorpUserDel(unittest.TestCase):
             "user_id": user_id,
             "corp_id": corp_id}
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test06_corp_user_del_success(self):
         '''case06:用户从组删除[RSM]--删除用户成功'''
@@ -458,8 +458,8 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}' and corp_id = '{}';'''.format(
             user_id, corp_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
                          2, "删除失败")
 
@@ -476,8 +476,8 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id in ('{}','{}') and corp_id = '{}';'''.format(
             user_one, user_two, corp_id)
         corp_user_status = opera_db.get_fetchall(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         opera_assert.is_list_in(2, corp_user_status, "status")
 
     def test08_corp_user_del_noCorpId(self):
@@ -490,8 +490,8 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}' and corp_id = '{}';'''.format(
             user_id, corp_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
                          2, "删除失败")
 
@@ -508,8 +508,8 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id in ('{}','{}') and corp_id = '{}';'''.format(
             user_one, user_two, corp_id)
         corp_user_status = opera_db.get_fetchall(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         opera_assert.is_list_in(2, corp_user_status, "status")
 
     def test10_corp_user_del_noAuth(self):
@@ -522,8 +522,8 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}' and corp_id = '{}';'''.format(
             user_id, corp_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
                          2, "删除失败")
 
@@ -537,7 +537,7 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}';'''.format(
             user_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
                          1, "管理员删除其他组织用户成功")
 
@@ -549,8 +549,8 @@ class TestCorpUserDel(unittest.TestCase):
         data = {"user_id": user_id}
         common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(api, data, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     @unittest.skip("存在BUG，暂时跳过")
     def test13_corp_user_del_delCorpUser(self):
@@ -573,7 +573,7 @@ class TestCorpUserDel(unittest.TestCase):
         sql = '''select status from corp_user where user_id = '{}';'''.format(
             user_id)
         corp_user_status = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertEqual(corp_user_status["status"],
-                         1, "已被移除的管理员仍可以删除用户")
+                         1, "数据库查询结果:{}".format(corp_user_status))

@@ -29,7 +29,7 @@ class InitTest:
         user_resopnse = self.run_method.post(createUser_api,createUser_data,headers=self.super_header)
         if user_resopnse.status_code is not 200:
             print("用户新增失败")
-            print(user_resopnse.json())
+            print(self.run_method.errInfo(user_resopnse))
         user_id = user_resopnse.json()["id"]
         self.opera_json.check_json_value("user_corp_add",{"user_id":user_id})
 
@@ -41,7 +41,7 @@ class InitTest:
         reset_response = self.run_method.post(userReset_api,userReset_data)
         if reset_response.status_code is not 200:
             print("新用户修改密码失败")
-            print(reset_response.json())
+            print(self.run_method.errInfo(reset_response))
 
         # 新增公司
         createCorp_api = '/corp/create'
@@ -49,7 +49,7 @@ class InitTest:
         corp_response = self.run_method.post(createCorp_api,createCorp_data,headers=self.super_header)
         if corp_response.status_code is not 200:
             print("公司新增失败")
-            print(corp_response.json())
+            print(self.run_method.errInfo(corp_response))
         corp_id = corp_response.json()["id"]
         self.opera_json.check_json_value("user_corp_add",{"user_id":user_id,"corp_id":corp_id})
 
@@ -61,7 +61,7 @@ class InitTest:
         userCorp_response = self.run_method.post(user_corp_api,user_corp_data,headers=self.super_header)
         if userCorp_response.status_code is not 200:
             print("用户绑定到公司失败")
-            print(userCorp_response.json())
+            print(self.run_method.errInfo(userCorp_response))
         
 
 

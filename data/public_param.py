@@ -24,19 +24,13 @@ class PublicParam:
         api = "/user/login"
         data = {"email": "admin@admin",
                 "password": "abc123"}
-        res = self.run_method.post(api, data)
-        res_dict = res.json()
-        if res.status_code == 200:
-            token = res_dict["token"]
+        try:
+            res = self.run_method.post(api, data)
+            res.raise_for_status()
+            token = res.json()["token"]
             return token
-        elif res.status_code == 400:
-            err_code = res_dict["code"]
-            if err_code == 1401:
-                print("Super密码不匹配")
-            elif err_code == 1404:
-                print("Super用户不存在")
-            elif err_code == 1426:
-                print("Super密码需修改")
+        except:
+            print(self.run_method.errInfo(res))
 
     # 超级管理员 (1 << 30) header
     def get_super_header(self):
@@ -53,20 +47,15 @@ class PublicParam:
         else:
             data = {"email": "xdchenadmin@admin",
                     "password": 12345678}
-        res = self.run_method.post(api, data)
-        res_dict = res.json()
-        if res.status_code == 200:
-            token = res_dict["token"]
-            corp_id = res_dict["corp_id"]
+        try:
+            res = self.run_method.post(api, data)
+            res.raise_for_status()
+            token = res.json()["token"]
+            corp_id = res.json()["corp_id"]
             return token, corp_id
-        elif res.status_code == 400:
-            err_code = res_dict["code"]
-            if err_code == 1401:
-                print("Corp密码不匹配")
-            elif err_code == 1404:
-                print("Corp用户不存在")
-            elif err_code == 1426:
-                print("Corp密码需修改")
+        except:
+            print(self.run_method.errInfo(res))
+
 
     # 公司管理员 header
     def get_corp_user(self):
@@ -132,8 +121,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("用户创建失败")
-            print(res.json())
-            return res.json()
+            print(self.run_method.errInfo(res))
 
     # 创建公司
     def create_corp(self, corp_name=None):
@@ -151,7 +139,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("组织(公司)创建失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
     # 用户添加到组织（公司）
     def user_add_corp(self, user_id, corp_id, role=None):
@@ -167,10 +155,10 @@ class PublicParam:
             res = self.run_method.post(
                 api, data, headers=self.get_super_header())
             res.raise_for_status()
-            assert res.json()["id"] is not ''
+            assert res.json()["id"] is not '',self.run_method.errInfo(res)
         except:
             print("用户绑定到组织失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
     # 用户第一次登录前重置密码
     def user_pwd_reset(self, password, newpasswd, user_id=None, email=None, mobile=None):
@@ -195,7 +183,7 @@ class PublicParam:
             res.raise_for_status()
         except:
             print("用户重置密码失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
     # 用户登录并返回token
     def user_header(self, password, email=None, mobile=None):
@@ -213,7 +201,7 @@ class PublicParam:
             return {"Authorization": res.json()["token"]}
         except:
             print("用户登录失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
     # 将用户从组织删除
     def user_corp_del(self, user_id, corp_id=None, corp_header=None):
@@ -228,10 +216,10 @@ class PublicParam:
         try:
             del_response = self.run_method.post(
                 del_api, data, headers=self.get_super_header())
-            del_response.raise_for_status
+            del_response.raise_for_status()
         except:
             print("用户删除失败")
-            print(del_response.json())
+            print(self.run_method.errInfo(del_response))
 
     # 创建用户，包括 : 管理员用户，普通用户，返回header
     def common_user(self, corp_id=None, role=None):
@@ -342,7 +330,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("新增园区失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
     # 当传入 zone_id,未传入 header 时，传入的 zone_id 无效
     def create_building(self, zone_id=None, header=None, is_belong_zone=True):
@@ -383,7 +371,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("新增建筑失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
     
     # 创建独栋建筑
     def create_sign_building(self,data=None,header=None):
@@ -420,7 +408,7 @@ class PublicParam:
             return res.json()["id"]
         except:
             print("新增建筑失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
 
     # 获取园区详细信息
@@ -433,7 +421,7 @@ class PublicParam:
             return res.json()
         except:
             print("获取园区详细信息失败")
-            print(res.json())
+            print(self.run_method.errInfo(res))
 
     # 获取建筑详细信息
     def building_get(self, building_id, header):
@@ -445,6 +433,7 @@ class PublicParam:
             return res.json()
         except:
             print("获取建筑详细信息失败")
+            print(self.run_method.errInfo(res))
     
     # 创建building，并上传模型
     def building_model_upload(self,building_id=None,header=None,model_type=None,filename=None):
@@ -468,15 +457,19 @@ class PublicParam:
                 "building_id" :building_id,
                 "model_type":model_type
             }
-        with open(path_file,'rb') as fileop:
-            files = {"file":fileop}
-            r = self.run_method.post(api,data=data,files=files,headers=header)
         try:
-            if "err" in r.json():
-                print("创建building并上传模型返回error")
-            return r.json(),building_id
-        except ValueError:
+            with open(path_file,'rb') as fileop:
+                files = {"file":fileop}
+                r = self.run_method.post(api,data=data,files=files,headers=header)
+        except:
             print("创建building并上传模型失败")
+            print(self.run_method.errInfo(r))
+        if "err" in r.json():
+            print("创建building并上传模型返回error")
+            print(self.run_method.errInfo(r))
+        return r.json(),building_id
+
+
 
     # 获取meta_url页面构件的GUID
     def get_guid(self,meta_url):
@@ -522,7 +515,7 @@ class PublicParam:
             return entity.json()
         except:
             print("获取构建信息超时")
-            print(entity.json())
+            print(self.run_method.errInfo(entity))
         
 if __name__ == "__main__":
     import time

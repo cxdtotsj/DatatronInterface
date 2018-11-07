@@ -46,8 +46,8 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.pop("name")
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, "状态码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_building_create_noLoc(self):
         '''case02:创建建筑--无地址'''
@@ -56,8 +56,8 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.pop("loc")
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, "状态码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test03_building_create_noArea(self):
         '''case03:创建建筑--无面积'''
@@ -66,9 +66,9 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.pop("area")
         res = run_method.post(api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         building_detail = pub_param.building_get(
             res.json()["id"], corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(building_detail["area"], 0, "面积默认值返回错误")
 
     def test04_buliding_create_noLayer(self):
@@ -78,9 +78,9 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.pop("layer_num")
         res = run_method.post(api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         building_detail = pub_param.building_get(
             res.json()["id"], corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(building_detail["layer_num"], 0, "楼层数默认值返回错误")
 
     def test05_buliding_create_noUnderlayer(self):
@@ -94,8 +94,8 @@ class TestBuildingCreate(unittest.TestCase):
             building_detail = pub_param.building_get(
                 res.json()["id"], corp_header)
         except KeyError:
-            print(res.json())
-        self.assertEqual(res.status_code, 200, res.json())
+            print(run_method.errInfo(res))
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(building_detail["underlayer_num"], 0, "地下层数默认值返回错误")
 
     def test06_building_create_noCoord(self):
@@ -105,8 +105,8 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.pop("coord")
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, "状态码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test07_building_create_noZoneId(self):
         '''case07:创建建筑[ZCM]--不属于园区建筑(无附加信息)'''
@@ -118,9 +118,9 @@ class TestBuildingCreate(unittest.TestCase):
             building_detail = pub_param.building_get(
                 res.json()["id"], corp_header)
         except KeyError:
-            print(res.json())
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["corp_id"], corp_id, "组织ID返回错误")
+            print(run_method.errInfo(res))
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["corp_id"], corp_id, run_method.errInfo(res))
         self.assertEqual(building_detail["zone_id"], "", "独栋建筑存在园区ID")
 
         opera_json.check_json_value(
@@ -134,10 +134,10 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.update(zone_id=zone_id)
         res = run_method.post(api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         building_detail = pub_param.building_get(
             res.json()["id"], corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["corp_id"], corp_id, "组织ID返回错误")
+        self.assertEqual(res.json()["corp_id"], corp_id, run_method.errInfo(res))
         self.assertEqual(building_detail["zone_id"], zone_id, "园区建筑不存在园区ID")
 
     def test09_building_create_success(self):
@@ -162,10 +162,10 @@ class TestBuildingCreate(unittest.TestCase):
             }
         })
         res = run_method.post(api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         building_detail = pub_param.building_get(
             res.json()["id"], corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["corp_id"], corp_id, "组织ID返回错误")
+        self.assertEqual(res.json()["corp_id"], corp_id, run_method.errInfo(res))
         self.assertEqual(building_detail["zone_id"], zone_id, "园区建筑不存在园区ID")
 
         opera_json.check_json_value("test09_building_create", {"id": res.json()[
@@ -182,7 +182,7 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.update(name=repeat_name)
         res = run_method.post(api, json=data, headers=ohter_corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     # 依赖用例 test07_building_create_noZoneId
     def test11_building_create_nameRepeat(self):
@@ -194,8 +194,8 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.update(name=repeat_name)
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1409, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1409, run_method.errInfo(res))
 
     # 依赖用例 test09_building_create_success
     def test12_building_create_nameRepeat(self):
@@ -211,8 +211,8 @@ class TestBuildingCreate(unittest.TestCase):
             "zone_id": building_detail["zone_id"]
         })
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1409, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1409, run_method.errInfo(res))
 
     # 依赖用例 test09_building_create_success
     def test13_building_create_nameRepeat(self):
@@ -227,8 +227,8 @@ class TestBuildingCreate(unittest.TestCase):
             "zone_id": zone_id,
         })
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["corp_id"], corp_id, "组织ID返回错误")
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["corp_id"], corp_id, run_method.errInfo(res))
 
     def test14_building_create_rsm(self):
         '''case14:创建建筑[ZSM]--超级管理员新增(角色受限)'''
@@ -236,8 +236,8 @@ class TestBuildingCreate(unittest.TestCase):
         api = '/building/create'
         data = Building.building_data()
         res = run_method.post(api, json=data, headers=super_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test15_building_create_noRole(self):
         '''case15:创建建筑--普通组织用户新增(角色受限)'''
@@ -246,8 +246,8 @@ class TestBuildingCreate(unittest.TestCase):
         common_user_header = pub_param.common_user(corp_id)
         data = Building.building_data()
         res = run_method.post(api, json=data, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     @unittest.skip("存在BUG，暂时跳过")
     def test16_building_create_delCorpUser(self):
@@ -266,8 +266,8 @@ class TestBuildingCreate(unittest.TestCase):
 
         # 新增园区
         res = run_method.post(api, json=data, headers=user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
 
 class TestBuildingGet(unittest.TestCase):
@@ -300,9 +300,8 @@ class TestBuildingGet(unittest.TestCase):
         api = '/building/get'
         data = {"id": None}
         res = run_method.post(api, data, headers=corp_header)
-        res_dict = res.json()
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res_dict["code"], 1404, "状态码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1404, run_method.errInfo(res))
 
     def test02_building_get_errId(self):
         '''case02:获取建筑详细信息[ZCM]--其他组织的建筑'''
@@ -311,8 +310,8 @@ class TestBuildingGet(unittest.TestCase):
         other_building_id = pub_param.create_building()
         data = {"id": other_building_id}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test03_building_get_success(self):
         '''case03:获取建筑详细信息[ZCM]--所在组织的建筑'''
@@ -320,7 +319,7 @@ class TestBuildingGet(unittest.TestCase):
         api = '/building/get'
         data = {"id": self.building_id}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断 新增的园区信息 是否返回正确
         opera_assert.is_dict_in(self.building_data, res.json())
 
@@ -330,7 +329,7 @@ class TestBuildingGet(unittest.TestCase):
         api = '/building/get'
         data = {"id": self.building_id}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断 新增的园区信息 是否返回正确
         opera_assert.is_dict_in(self.building_data, res.json())
 
@@ -341,7 +340,7 @@ class TestBuildingGet(unittest.TestCase):
         common_user_header = pub_param.common_user(corp_id)
         data = {"id": self.building_id}
         res = run_method.post(api, data, headers=common_user_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断 新增的园区信息 是否返回正确
         opera_assert.is_dict_in(self.building_data, res.json())
 
@@ -351,8 +350,8 @@ class TestBuildingGet(unittest.TestCase):
         api = '/building/get'
         data = {"id": "11223344"}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1404, "状态码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1404, run_method.errInfo(res))
 
 
 class TestBuildingList(unittest.TestCase):
@@ -364,7 +363,7 @@ class TestBuildingList(unittest.TestCase):
         data = {"page": 1,
                 "size": 10}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断返回的建筑是否都为该 corp_id
         opera_assert.is_list_in(
             corp_id, res.json()["data_list"], "corp_id")
@@ -379,7 +378,7 @@ class TestBuildingList(unittest.TestCase):
                 "size": 10,
                 "zone_id": zone_id}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断返回的建筑是否都为该 zone_id
         opera_assert.is_list_in(
             zone_id, res.json()["data_list"], "zone_id")
@@ -393,8 +392,8 @@ class TestBuildingList(unittest.TestCase):
         res = run_method.post(api, data, headers=super_header)
         sql = '''select id as total from building where status != 3;'''
         building_num = opera_db.get_effect_row(sql)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], str(building_num), "返回的建筑数量不正确")
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], str(building_num), run_method.errInfo(res))
 
     def test04_building_list_noRole(self):
         '''case04:建筑列表--组织普通用户'''
@@ -404,7 +403,7 @@ class TestBuildingList(unittest.TestCase):
                 "size": 10}
         common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(api, data, headers=common_user_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断返回的建筑是否都为该 corp_id
         opera_assert.is_list_in(
             corp_id, res.json()["data_list"], "corp_id")
@@ -416,8 +415,8 @@ class TestBuildingList(unittest.TestCase):
         data = {"page": 1,
                 "size": 10}
         res = run_method.post(api, data, headers={"Authorization": "abc"})
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, "状态码返回错误")
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
 
 class TestBuildingUpdate(unittest.TestCase):
@@ -451,7 +450,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(name=None)
         res = run_method.post(api, json=data, headers=corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(new_data["name"], '', "建筑名称被更新为NULL")
 
     def test02_building_update_nameRepeat(self):
@@ -465,7 +464,7 @@ class TestBuildingUpdate(unittest.TestCase):
         bud_two_data.update(name=bud_one_name)                                    # 更新独栋建筑二的 name,和第一栋建筑一致
         res = run_method.post(api, json=bud_two_data, headers=corp_header)
         bud_two_new_data = pub_param.building_get(bud_two_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(bud_two_new_data["name"], bud_one_name, "建筑名称更新为重复")   # 第二栋更新后的name和建筑一不一致
 
     def test03_building_update_area(self):
@@ -476,7 +475,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(area=222)
         res = run_method.post(api, json=data, headers=corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["area"], 222, "面积未更新成功")
 
     def test04_building_update_layerNum(self):
@@ -487,7 +486,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(layer_num=55)
         res = run_method.post(api, json=data, headers=corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["layer_num"], 55, "楼层未更新成功")
 
     def test05_building_update_underlayerNum(self):
@@ -498,7 +497,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(underlayer_num=10)
         res = run_method.post(api, json=data, headers=corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["underlayer_num"], 10, "地下楼层未更新成功")
 
     def test06_building_update_coord(self):
@@ -515,7 +514,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(coord=new_coord)
         res = run_method.post(api, json=data, headers=corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["coord"], new_coord, "经纬度未更新成功")
 
     def test07_building_update_extra(self):
@@ -538,7 +537,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(extra=new_extra)
         res = run_method.post(api, json=data, headers=corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["extra"], new_extra, "附加信息未更新成功")
 
     def test08_building_update_rsmArea(self):
@@ -549,8 +548,8 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(area=88)
         res = run_method.post(api, json=data, headers=super_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["area"], 88, "超管面积更新成功")
 
     def test09_building_update_noRole(self):
@@ -562,8 +561,8 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(area=77)
         res = run_method.post(api, json=data, headers=common_user_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["area"], 77, "普通用户面积更新成功")
 
     def test10_building_update_otherCorp(self):
@@ -575,7 +574,7 @@ class TestBuildingUpdate(unittest.TestCase):
         data.update(area=66)
         res = run_method.post(api, json=data, headers=other_corp_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(new_data["area"], 66, "面积更新成功")
 
     @unittest.skip("存在BUG,暂时跳过")
@@ -597,8 +596,8 @@ class TestBuildingUpdate(unittest.TestCase):
         # 编辑建筑
         res = run_method.post(api, json=data, headers=user_header)
         new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "状态码返回错误")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["area"], 199, "普通用户面积更新成功")
 
 
@@ -613,7 +612,7 @@ class TestBuildingDel(unittest.TestCase):
         data = {"id": building_id}
         res = run_method.post(api, data, headers=corp_header)
         new_data = pub_param.building_get(building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["status"], 3, "建筑未成功删除")
 
     def test02_building_del_zoneId(self):
@@ -624,7 +623,7 @@ class TestBuildingDel(unittest.TestCase):
         data = {"id": building_id}
         res = run_method.post(api, data, headers=corp_header)
         new_data = pub_param.building_get(building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(new_data["status"], 3, "建筑未成功删除")
 
     def test03_building_del_rsm(self):
@@ -635,8 +634,8 @@ class TestBuildingDel(unittest.TestCase):
         data = {"id": building_id}
         res = run_method.post(api, data, headers=super_header)
         new_data = pub_param.building_get(building_id, corp_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "普通用户删除园区成功")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["status"], 3, "超管删除建筑成功")
 
     def test04_building_del_noRole(self):
@@ -648,8 +647,8 @@ class TestBuildingDel(unittest.TestCase):
         data = {"id": building_id}
         res = run_method.post(api, data, headers=common_user_header)
         new_data = pub_param.building_get(building_id, corp_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "普通用户删除园区成功")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["status"], 3, "普通用户删除建筑成功")
 
     def test05_building_del_otherCorp(self):
@@ -661,7 +660,7 @@ class TestBuildingDel(unittest.TestCase):
         data = {"id": building_id}
         res = run_method.post(api, data, headers=other_corp_header)
         new_data = pub_param.building_get(building_id, corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(new_data["status"], 3, "其他组织管理员删除建筑成功")
 
     @unittest.skip("存在BUG,暂时跳过")
@@ -683,8 +682,8 @@ class TestBuildingDel(unittest.TestCase):
         # 编辑建筑
         res = run_method.post(api, data, headers=user_header)
         new_data = pub_param.building_get(building_id, corp_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, "普通用户删除园区成功")
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["status"], 3, "普通用户删除建筑成功")
 
 
@@ -703,8 +702,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, "错误码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_building_model_upload_errBuildingId(self):
         """case02:上传建筑模型[RCM]--错误的建筑ID"""
@@ -718,8 +717,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1404, "错误码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1404, run_method.errInfo(res))
 
     def test03_building_model_upload_noModelType(self):
         """case03:上传建筑模型[RCM]--无建筑物类型"""
@@ -733,8 +732,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertNotIn("err", res.json(), res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotIn("err", res.json(), run_method.errInfo(res))
 
     def test04_building_model_upload_errModelType(self):
         """case04:上传建筑模型[RCM]--错误的建筑物类型"""
@@ -749,8 +748,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, "错误码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test05_building_model_upload_noFile(self):
         """case05:上传建筑模型[RCM]--无模型文件"""
@@ -762,8 +761,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             "model_type": "T"
         }
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, "错误码返回错误")
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test06_building_model_upload_doubleType(self):
         """case06:上传建筑模型[RCM]--上传类型T、A,验证data.json未被覆盖"""
@@ -795,8 +794,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=super_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test08_building_model_upload_noRole(self):
         """case08:上传建筑模型[普通用户]--普通用户上传建筑模型"""
@@ -812,8 +811,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test09_building_model_upload_OtherCorp(self):
         """case09:上传建筑模型[RCM]--RCM上传其他组织的建筑模型"""
@@ -828,8 +827,8 @@ class TestBuildingModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 api, data, files=files, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
 
 class TestBuildingModelGet(unittest.TestCase):
@@ -843,8 +842,8 @@ class TestBuildingModelGet(unittest.TestCase):
             "model_type": "T"
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_building_model_get_errBuildingId(self):
         """case02:获取模型关联信息[RCM]--错误的建筑ID"""
@@ -855,8 +854,8 @@ class TestBuildingModelGet(unittest.TestCase):
             "model_type": "T"
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test03_building_model_get_noModelType(self):
         """case03:获取模型关联信息[RCM]--无模型类型"""
@@ -869,8 +868,8 @@ class TestBuildingModelGet(unittest.TestCase):
             "model_type": None
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
         opera_json.check_json_value("test03_building_model_get",
                                     {"building_id": building_id,
@@ -888,8 +887,8 @@ class TestBuildingModelGet(unittest.TestCase):
             "model_type": "SCC"
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test05_building_model_get_success(self):
         """case05:获取模型关联信息[RCM]--查询成功"""
@@ -902,8 +901,8 @@ class TestBuildingModelGet(unittest.TestCase):
             "model_type": "T"
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["id"], model_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], model_id, run_method.errInfo(res))
 
 
 class TestBuildingModelList(unittest.TestCase):
@@ -916,8 +915,8 @@ class TestBuildingModelList(unittest.TestCase):
             "building_id": None
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], "0", res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], "0", run_method.errInfo(res))
 
     def test02_building_model_list_errBuildingId(self):
         """case02:特定建筑模型列表--错误的建筑ID"""
@@ -927,8 +926,8 @@ class TestBuildingModelList(unittest.TestCase):
             "building_id": "112233"
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["total"], "0", res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["total"], "0", run_method.errInfo(res))
 
     def test03_building_model_list_success(self):
         """case03:特定建筑模型列表--查询成功"""
@@ -940,7 +939,7 @@ class TestBuildingModelList(unittest.TestCase):
             "building_id": building_id
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         opera_assert.is_list_in(building_id, res.json()[
                                 "data_list"], "building_id")
 
@@ -958,7 +957,7 @@ class TestBuildingModelList(unittest.TestCase):
         }
         res = run_method.post(api, data)
         mt_sorted = Building.modelType_sorted()  # 已排好序的model_type
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         opera_assert.is_equal_sorted(
             mt_sorted, res.json()["data_list"], "model_type")
 
@@ -978,8 +977,8 @@ class TestBuildingModelEntityget(unittest.TestCase):
             "guid": guid
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
         opera_json.check_json_value("test01_building_model_entityget",
                                     {"building_id": building_id,
@@ -997,8 +996,8 @@ class TestBuildingModelEntityget(unittest.TestCase):
             "guid": guid
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test03_building_model_entityget_noGuId(self):
         """case03:获取构件信息--无构件ID"""
@@ -1010,8 +1009,8 @@ class TestBuildingModelEntityget(unittest.TestCase):
             "guid": None
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test04_building_model_entityget_errGuId(self):
         """case04:获取构件信息--错误的构件ID"""
@@ -1023,8 +1022,8 @@ class TestBuildingModelEntityget(unittest.TestCase):
             "guid": "abc123"
         }
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test05_building_model_entityget_success(self):
         """case05:获取构件信息--查询成功"""
@@ -1036,7 +1035,7 @@ class TestBuildingModelEntityget(unittest.TestCase):
             "model_id": model_id,
             "guid": guid}
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
 
 class TestBuildingModelUpdate(unittest.TestCase):

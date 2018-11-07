@@ -42,46 +42,46 @@ class TestThingsAdd(unittest.TestCase):
 
         self.data.update(device_name=None)
         res = run_method.post(self.api, self.data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_things_add_noToken(self):
         """case02:设备添加[RCM]--无Auth"""
 
         res = run_method.post(self.api, self.data)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test03_things_add_rsm(self):
         """case03:设备添加[RCM]--RSM新增"""
 
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test04_things_add_noRole(self):
         """case04:设备添加[普通用户]--普通用户新增"""
 
         common_user_header = pub_param.common_user(corp_id=corp_id)
         res = run_method.post(self.api, self.data, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test05_things_add_rcm(self):
         """case05:设备添加[RCM]--RCM新增"""
 
         res = run_method.post(self.api, self.data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertIsNotNone(res.json()["id"], res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["id"], run_method.errInfo(res))
 
     def test06_things_add_default_deviceType(self):
         """case06:设备添加[RCM]--默认的设备类型"""
 
         res = run_method.post(self.api, self.data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         sql = '''select device_type from thingsv2 
                     where id = "{}";'''.format(res.json()["id"])
         device_type = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(device_type["device_type"],
                          0, "数据库结果:{}".format(device_type))
 
@@ -90,10 +90,10 @@ class TestThingsAdd(unittest.TestCase):
 
         self.data.update(device_type="TYPE_GATEWAY")
         res = run_method.post(self.api, self.data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         sql = '''select device_type from thingsv2 
                     where id = "{}";'''.format(res.json()["id"])
         device_type = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(device_type["device_type"],
                          1, "数据库结果:{}".format(device_type))
 
@@ -105,9 +105,9 @@ class TestThingsAdd(unittest.TestCase):
             "device_desc": "设备说明"
         })
         res = run_method.post(self.api, self.data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         sql = '''select device_desc from thingsv2 
                     where id = "{}";'''.format(res.json()["id"])
         device_desc = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, res.json())
         self.assertEqual(
             device_desc["device_desc"], self.data["device_desc"], "数据库结果:{}".format(device_desc))

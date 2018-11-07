@@ -40,38 +40,37 @@ class TestUserCreate(unittest.TestCase, User):
 
         self.data.update(name=None)
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_user_create_noPasswd(self):
         '''case02:创建用户[RSM]--缺少密码'''
 
         self.data.update(password=None)
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test03_user_create_noToken(self):
         '''case03:创建用户[RSM]--无token'''
 
         res = run_method.post(self.api, self.data)
-        self.assertEqual(res.status_code, 401, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 401, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test04_user_create_noEAM(self):
         '''case04:创建用户[RSM]--无手机号和邮箱'''
 
         self.data.pop("email")
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test05_user_create_super_email(self):
         '''case05:创建用户[RSM]--超管邮箱新增'''
 
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
-
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         opera_json.check_json_value("test05_user_create", self.data["email"])   # 保存email至json，后续用例调用
 
     # 依赖用例 test05_user_create
@@ -81,8 +80,8 @@ class TestUserCreate(unittest.TestCase, User):
         repeat_email = opera_json.get_data("test05_user_create")  # 获取用例test05_user_create的email
         self.data.update(email=repeat_email)
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1409, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1409, run_method.errInfo(res))
 
     def test07_user_create_super_mobile(self):
         '''case07:创建用户[RSM]--超管手机新增'''
@@ -90,7 +89,7 @@ class TestUserCreate(unittest.TestCase, User):
         self.data.pop("email")
         self.data.update(mobile=User.user_mobile())
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
         opera_json.check_json_value("test07_user_create", self.data["mobile"])    # 保存mobile至json
 
@@ -102,22 +101,22 @@ class TestUserCreate(unittest.TestCase, User):
         repeat_mobile = opera_json.get_data("test07_user_create")   # 获取test07_user_create的mobile
         self.data.update(mobile=repeat_mobile)
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1409, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1409, run_method.errInfo(res))
 
     def test09_user_create_noRole(self):
         '''case09:创建用户[普通用户]--未授权创建用户'''
 
         common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(self.api, self.data, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, res.json())
-        self.assertEqual(res.json()["code"], 1403, res.json())
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test10_user_create_email(self):
         '''case10:创建用户[RCM]--组管理员邮箱创建'''
 
         res = run_method.post(self.api, self.data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     def test11_user_create_mobile(self):
         '''case11:创建用户[RCM]--组管理员手机创建'''
@@ -125,14 +124,14 @@ class TestUserCreate(unittest.TestCase, User):
         self.data.pop("email")
         self.data.update(mobile=User.user_mobile())
         res = run_method.post(self.api, self.data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     def test12_user_create_BothEM(self):
         '''case12:创建用户[RCM]--组管理员手机、邮箱同时创建'''
 
         self.data.update(mobile=User.user_mobile())
         res = run_method.post(self.api, self.data, headers=corp_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
 
 class TestUserList(unittest.TestCase):
@@ -147,7 +146,7 @@ class TestUserList(unittest.TestCase):
         '''case01:用户列表--超管查询所有用户（Size最大100）'''
 
         res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 200, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     def test02_user_list_rcm(self):
         '''case02:用户列表--组织管理员查看自己所在组(暂不支持)'''
@@ -173,8 +172,8 @@ class TestUserLogin(unittest.TestCase):
 
         data = {"mobile": "122121"}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_user_login_errMobile(self):
         '''case02:登录接口--错误的手机号'''
@@ -183,8 +182,8 @@ class TestUserLogin(unittest.TestCase):
             "mobile": "122121",
             "password": 123456}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1404, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1404, run_method.errInfo(res))
 
     def test03_user_login_errEmail(self):
         '''case03:登录接口--错误的邮箱'''
@@ -193,8 +192,8 @@ class TestUserLogin(unittest.TestCase):
             "mobile": "122121",
             "password": 123456}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1404, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1404, run_method.errInfo(res))
 
     def test04_user_login_noPasswd(self):
         '''case04:登录接口--错误的密码'''
@@ -204,8 +203,8 @@ class TestUserLogin(unittest.TestCase):
             "email": user_email,
             "password": 000000}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test05_user_login_firstLogin(self):
         '''case05:登录接口--邮箱第一次登录,未重置密码'''
@@ -215,8 +214,8 @@ class TestUserLogin(unittest.TestCase):
             "email": user_email,
             "password": 123456}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1426, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1426, run_method.errInfo(res))
 
     def test06_user_login_firstLogin(self):
         '''case06:登录接口--邮箱登录，未绑定到组织(已重置密码)'''
@@ -227,8 +226,8 @@ class TestUserLogin(unittest.TestCase):
             "email": user_email,
             "password": 12345678}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1000, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test07_user_login_email(self):
         '''case07:登录接口--邮箱登录（绑定到组织）'''
@@ -238,8 +237,8 @@ class TestUserLogin(unittest.TestCase):
             "email": user_email,
             "password": 12345678}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["corp_id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["corp_id"], corp_id, run_method.errInfo(res))
 
     def test08_user_login_mobile(self):
         '''case08:登录接口--手机第一次登录'''
@@ -249,8 +248,8 @@ class TestUserLogin(unittest.TestCase):
             "mobile": user_mobile,
             "password": 12345678}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(res.json()["corp_id"], corp_id, res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["corp_id"], corp_id, run_method.errInfo(res))
 
     def test09_user_login_bothME(self):
         '''case09:登录接口--同时输入手机号和邮箱'''
@@ -262,8 +261,8 @@ class TestUserLogin(unittest.TestCase):
             "email": user_email,
             "password": 12345678}
         res = run_method.post(self.api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
 
 class TestUserPwdReset(unittest.TestCase):
@@ -279,8 +278,8 @@ class TestUserPwdReset(unittest.TestCase):
             "newpasswd": 12345678}
         res = run_method.post(api, data)
         login_res = pub_param.user_header(12345678, email=user_email)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertTrue(login_res["Authorization"], res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertTrue(login_res["Authorization"], run_method.errInfo(res))
 
     def test02_user_passwd_reset_mobile(self):
         '''case02:重置用户密码[普通用户]--输入手机修改密码并能登录'''
@@ -293,8 +292,8 @@ class TestUserPwdReset(unittest.TestCase):
             "newpasswd": 12345678}
         res = run_method.post(api, data)
         login_res = pub_param.user_header(12345678, mobile=user_mobile)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertTrue(login_res["Authorization"], res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertTrue(login_res["Authorization"], run_method.errInfo(res))
 
     def test03_user_passwd_reset_email(self):
         '''case03:重置用户密码[普通用户]--输入邮箱修改密码并能登录'''
@@ -307,8 +306,8 @@ class TestUserPwdReset(unittest.TestCase):
             "newpasswd": 12345678}
         res = run_method.post(api, data)
         login_res = pub_param.user_header(12345678, email=user_email)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertTrue(login_res["Authorization"], res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertTrue(login_res["Authorization"], run_method.errInfo(res))
 
     def test04_user_passwd_reset_noPasswd(self):
         '''case04:重置用户密码[RSM]--新密码为空'''
@@ -319,8 +318,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "newpasswd": None}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test05_user_passwd_reset_errPasswd(self):
         '''case05:重置用户密码[RSM]--新密码小于6位'''
@@ -331,8 +330,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "newpasswd": 12345}
         res = run_method.post(api, data, headers=super_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1400, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test06_user_passwd_reset_noToken(self):
         '''case06:重置用户密码[RSM]--原密码不填，无token'''
@@ -343,8 +342,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "newpasswd": 123456}
         res = run_method.post(api, data)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test07_user_passwd_reset_mustFalse(self):
         '''case07:重置用户密码--超管修改密码后登录（需要重置密码）'''
@@ -360,8 +359,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "password": 1234567}
         login_res = run_method.post("/user/login", login_data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(login_res.json()["code"], 1426, login_res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(login_res.json()["code"], 1426, run_method.errInfo(login_res))
 
     def test08_user_passwd_reset_noRole(self):
         '''case08:重置用户密码[普通用户]--修改其他用户密码'''
@@ -376,8 +375,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "newpasswd": 12345678}
         res = run_method.post(api, data, headers=common_user_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
     def test09_user_passwd_reset_oldLonin(self):
         '''case09:重置用户密码[RSM]--修改密码后用旧密码登录'''
@@ -392,8 +391,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "password": 123456}
         login_res = run_method.post("/user/login", login_data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(login_res.json()["code"], 1401, login_res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(login_res.json()["code"], 1401, run_method.errInfo(res))
 
     def test10_user_passwd_reset_newLogin(self):
         '''case10:重置用户密码[RSM]--修改密码后用新密码登录'''
@@ -408,8 +407,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "password": 12345678}
         login_res = run_method.post("/user/login", login_data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(login_res.status_code, 200, login_res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(login_res.status_code, 200, run_method.errInfo(login_res))
 
     @unittest.skip("确认 组织管理员是否可以修改密码？")
     def test11_user_passwd_reset_Corp(self):
@@ -425,8 +424,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "password": 12345678}
         login_res = run_method.post("/user/login", login_data)
-        self.assertEqual(res.status_code, 200, res.json())
-        self.assertEqual(login_res.status_code, 200, login_res.json())
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(login_res.status_code, 200, run_method.errInfo(login_res))
 
     def test12_user_passwd_reset_otherCorp(self):
         '''case12:重置用户密码[RCM]--修改其他组织用户密码'''
@@ -437,8 +436,8 @@ class TestUserPwdReset(unittest.TestCase):
             "email": user_email,
             "newpasswd": 12345678}
         res = run_method.post(api, data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, res.json())
-        self.assertEqual(res.json()["code"], 1401, res.json())
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
 
 if __name__ == '__main__':
