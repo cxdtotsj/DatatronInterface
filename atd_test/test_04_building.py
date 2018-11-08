@@ -30,11 +30,12 @@ import time
 
 run_method = BaseMethod()
 pub_param = PublicParam()
+super_header = pub_param.get_super_header()
+corp_header, corp_id = pub_param.get_corp_user()
 opera_json = OperetionJson()
 opera_assert = OperationAssert()
 opera_db = OperationDB()
-super_header = pub_param.get_super_header()
-corp_header, corp_id = pub_param.get_corp_user()
+
 
 
 class TestBuildingCreate(unittest.TestCase):
@@ -357,7 +358,7 @@ class TestBuildingGet(unittest.TestCase):
 class TestBuildingList(unittest.TestCase):
 
     def test01_building_list_success(self):
-        '''case01:建筑列表[ZCM]--查看成功,无zone_id(corp_id)'''
+        '''case01:建筑列表[RCM]--查看成功,无zone_id(corp_id)'''
 
         api = '/building/list'
         data = {"page": 1,
@@ -369,7 +370,7 @@ class TestBuildingList(unittest.TestCase):
             corp_id, res.json()["data_list"], "corp_id")
 
     def test02_building_list_zoneId(self):
-        '''case02:建筑列表[ZCM]--园区ID过滤(zone_id)'''
+        '''case02:建筑列表[RCM]--园区ID过滤(zone_id)'''
 
         api = '/building/list'
         zone_id = pub_param.create_zone(corp_header)                  # 新增园区
@@ -384,7 +385,7 @@ class TestBuildingList(unittest.TestCase):
             zone_id, res.json()["data_list"], "zone_id")
 
     def test03_building_list_zsm(self):
-        '''case03:建筑列表[ZSM]--超级管理员(total数量)'''
+        '''case03:建筑列表[RSM]--超级管理员(total数量)'''
 
         api = '/building/list'
         data = {"page": 1,

@@ -266,7 +266,7 @@ class TestZoneGet(unittest.TestCase):
 class TestZoneList(unittest.TestCase):
 
     def test01_zone_list_success(self):
-        '''case01:园区列表[ZCM]--查看成功(corp_id)'''
+        '''case01:园区列表[RCM]--查看成功(corp_id)'''
 
         api = '/zone/list'
         data = {"page": 1,
@@ -278,7 +278,7 @@ class TestZoneList(unittest.TestCase):
             corp_id, res.json()["data_list"], "corp_id")
 
     def test02_zone_list_zsm(self):
-        '''case02:园区列表[ZSM]--超级管理员(total数量)'''
+        '''case02:园区列表[RSM]--超级管理员(total数量)'''
 
         api = '/zone/list'
         data = {"page": 1,
