@@ -473,7 +473,7 @@ class PublicParam:
     # 获取meta_url页面构件的GUID
     def get_guid(self,meta_url):
         """输入 meta_url,返回 guid"""
-        for i in range(6):
+        for _ in range(6):
             r = requests.get(meta_url)
             if r.status_code == 200:
                 break
@@ -489,7 +489,7 @@ class PublicParam:
     # 获取meta_url的 entities
     def get_entities(self, meta_url):
         """输入 meta_url,返回 entities"""
-        for i in range(6):
+        for _ in range(6):
             r = requests.get(meta_url)
             if r.status_code == 200:
                 break
@@ -516,7 +516,7 @@ class PublicParam:
     # 获取更新后的meta_url 页面返回的更新后的 Entities
     def get_update_entities(self,meta_url,old_guid):
         """输入 meta_url，未更新前的 old_guid,返回 entities"""
-        for i in range(6):
+        for _ in range(6):
             guid = self.get_guid(meta_url)  # 获取新的guid
             if guid == old_guid:            # 更新完成前，guid仍是原来的
                 time.sleep(5)
