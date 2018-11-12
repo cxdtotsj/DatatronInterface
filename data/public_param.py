@@ -464,11 +464,10 @@ class PublicParam:
         except:
             print("创建building并上传模型失败")
             print(self.run_method.errInfo(r))
-        if "err" in r.json():
+        if "err" in r.text:
             print("创建building并上传模型返回error")
             print(self.run_method.errInfo(r))
         return r.json(),building_id
-
 
 
     # 获取meta_url页面构件的GUID
@@ -485,6 +484,34 @@ class PublicParam:
         except ValueError:
             guid = None
         return guid
+
+
+    # 获取meta_url的 entities
+    def get_entities(self, meta_url):
+        """输入 meta_url,返回 entities"""
+        for i in range(6):
+            r = requests.get(meta_url)
+            if r.status_code == 200:
+                break
+            else:
+                time.sleep(5)
+        try:
+            entities = r.json()["Entities"]
+        except ValueError:
+            entities = None
+        return entities
+
+    # 获取 entities 的 guidList
+    def get_guidList(self, building_id,header=None,filename=None):
+        """返回 guidList"""
+        # 上传建筑模型
+        r, __ = self.building_model_upload(
+            building_id=building_id, header=header,filename=filename)
+        meta_url = r["meta_url"]
+        # 获取entities
+        entities = self.get_entities(meta_url)
+        guidList = [entity["Guid"] for entity in entities]
+        return guidList
 
     # 获取更新后的meta_url 页面返回的更新后的 Entities
     def get_update_entities(self,meta_url,old_guid):
@@ -516,11 +543,73 @@ class PublicParam:
         except:
             print("获取构建信息超时")
             print(self.run_method.errInfo(entity))
+
+    # 创建设备
+    def create_device(self,data=None,header=None):
+        """return device_id"""
+        api = '/things/add'
+        if data is not None:
+            data = data
+        else:
+            device_name = self.random_name("随机设备名称")
+            data = {
+                "device_name":device_name
+                }
+        if header is not None:
+            user_header = header
+        else:
+            user_header = self.common_user(role=524288)
+        try:
+            res = self.run_method.post(api, data, headers=user_header)
+            res.raise_for_status()
+            return res.json()["id"]
+        except:
+            print("新增设备失败")
+            print(self.run_method.errInfo(res))
+    
+    # 创建场景
+    def create_scene(self,data=None,header=None):
+        """return scene_id"""
+        api = '/scene/create'
+        if data is not None:
+            data = data
+        else:
+            scene_name = self.random_name("随机场景名称")
+            data = {
+                "name":scene_name
+                }
+        if header is not None:
+            user_header = header
+        else:
+            user_header = self.common_user(role=524288)
+        try:
+            res = self.run_method.post(api, json=data, headers=user_header)
+            res.raise_for_status()
+            return res.json()["id"]
+        except:
+            print("新增场景失败")
+            print(self.run_method.errInfo(res))
         
+    # 获取场景
+    def get_scene(self,scene_id):
+        """return scene_json"""
+
+        api = '/scene/get'
+        data = {
+            "id":scene_id
+        }
+        try:
+            res = self.run_method.post(api,data)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print("获取场景失败")
+            print(self.run_method.errInfo(res))
+
+
+
 if __name__ == "__main__":
     import time
     bd = PublicParam()
-    name_1 = bd.random_name("自动化")
+    name_1 = bd.create_device()
     print(name_1)
-    can1,can2,can3 = bd.random_name("参数化",3)
-    print(can1,can2,can3)

@@ -140,7 +140,7 @@ class TestUserList(unittest.TestCase):
         self.api = '/user/list'
         self.data = {
             "page": 1,
-            "size": 20}
+            "size": 100}
 
     def test01_user_list_super(self):
         '''case01:用户列表--超管查询所有用户（Size最大100）'''

@@ -270,19 +270,19 @@ class TestZoneList(unittest.TestCase):
 
         api = '/zone/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         res = run_method.post(api, data, headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断返回的园区是否都为该 corp_id
         opera_assert.is_equal_value(
             corp_id, res.json()["data_list"], "corp_id")
 
-    def test02_zone_list_zsm(self):
+    def test02_zone_list_rsm(self):
         '''case02:园区列表[RSM]--超级管理员(total数量)'''
 
         api = '/zone/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         res = run_method.post(api, data, headers=super_header)
         sql = '''select id from zone where status not in (0,3);'''
         zone_num = opera_db.get_effect_row(sql)
@@ -294,7 +294,7 @@ class TestZoneList(unittest.TestCase):
 
         api = '/zone/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(api, data, headers=common_user_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
@@ -307,7 +307,7 @@ class TestZoneList(unittest.TestCase):
 
         api = '/zone/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         res = run_method.post(api, data, headers={"Authorization": "abc"})
         self.assertEqual(res.status_code, 401, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))

@@ -14,7 +14,7 @@ corp_header,corp_id = pp.get_corp_user()
 
 api = "https://dt-dev.arctron.cn/api/building/model/upload"
 
-filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','XKYY_2F.objr')
+filename = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','Office.objr')
 
 
 

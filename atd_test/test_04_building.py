@@ -1,17 +1,17 @@
 '''
 园区类接口
 
-test01 : /building/create
-test02 : /building/get
-test03 : /building/list
-test04 : /building/update
-test05 : /building/del
-test06 : /building/model/upload
-test07 : /building/model/get
-test08 : /building/model/list
-test09 : /building/model/entityget
-test10 : model update
-
+TestBuildingCreate :         /building/create
+TestBuildingGet :            /building/get
+TestBuildingList :           /building/list
+TestBuildingUpdate :         /building/update
+TestBuildingDel :            /building/del
+TestBuildingModelUpload :    /building/model/upload
+TestBuildingModelGet :       /building/model/get
+TestBuildingModelList :      /building/model/list
+TestBuildingModelEntityget : /building/model/entityget
+TestBuildingModelUpdate :     model update
+TestBuildingModelDevicelist: /building/model/devicelist
 '''
 
 import sys
@@ -30,12 +30,11 @@ import time
 
 run_method = BaseMethod()
 pub_param = PublicParam()
-super_header = pub_param.get_super_header()
-corp_header, corp_id = pub_param.get_corp_user()
 opera_json = OperetionJson()
 opera_assert = OperationAssert()
 opera_db = OperationDB()
-
+super_header = pub_param.get_super_header()
+corp_header, corp_id = pub_param.get_corp_user()
 
 
 class TestBuildingCreate(unittest.TestCase):
@@ -362,7 +361,7 @@ class TestBuildingList(unittest.TestCase):
 
         api = '/building/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         res = run_method.post(api, data, headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 判断返回的建筑是否都为该 corp_id
@@ -376,7 +375,7 @@ class TestBuildingList(unittest.TestCase):
         zone_id = pub_param.create_zone(corp_header)                  # 新增园区
         pub_param.create_building(zone_id=zone_id,header=corp_header) # 新增属于园区的建筑
         data = {"page": 1,
-                "size": 10,
+                "size": 100,
                 "zone_id": zone_id}
         res = run_method.post(api, data, headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
@@ -384,12 +383,12 @@ class TestBuildingList(unittest.TestCase):
         opera_assert.is_list_in(
             zone_id, res.json()["data_list"], "zone_id")
 
-    def test03_building_list_zsm(self):
+    def test03_building_list_rsm(self):
         '''case03:建筑列表[RSM]--超级管理员(total数量)'''
 
         api = '/building/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         res = run_method.post(api, data, headers=super_header)
         sql = '''select id as total from building where status != 3;'''
         building_num = opera_db.get_effect_row(sql)
@@ -401,7 +400,7 @@ class TestBuildingList(unittest.TestCase):
 
         api = '/building/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(api, data, headers=common_user_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
@@ -414,7 +413,7 @@ class TestBuildingList(unittest.TestCase):
 
         api = '/building/list'
         data = {"page": 1,
-                "size": 10}
+                "size": 100}
         res = run_method.post(api, data, headers={"Authorization": "abc"})
         self.assertEqual(res.status_code, 401, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
@@ -1084,3 +1083,309 @@ class TestBuildingModelUpdate(unittest.TestCase):
         new_metaUrl = new_res["meta_url"]
         entities = pub_param.get_update_entities(new_metaUrl, old_guid)
         self.assertNotIn(old_guid, [i["Guid"] for i in entities], "Guid未更新")
+
+
+class TestBuildingModelDeviceadd(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api = '/building/model/deviceadd'
+        cls.building_id = pub_param.create_building(header=corp_header)
+        cls.guidList = pub_param.get_guidList(cls.building_id,corp_header,"LangChaV2.objr")[:20]
+
+        opera_json.check_json_value("deviceadd",{"building_id":cls.building_id})    # use to class devicelist
+
+    def test01_building_model_deviceadd_noBuildingId(self):
+        """case01:添加关联设备[RCM]--无建筑ID"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": None,
+            "guid": self.guidList[0],
+            "things_id": device_id,
+            "type": "bim"
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test02_building_model_deviceadd_noThingsId(self):
+        """case02:添加关联设备[RCM]--无设备ID"""
+
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[1],   
+            "things_id": None,
+            "type": "bim"
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test03_building_model_deviceadd_noType(self):
+        """case03:添加关联设备[RCM]--无设备关联类型"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[2],   
+            "things_id": device_id,
+            "type": None
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test04_building_model_deviceadd_bim_noGU(self):
+        """case04:添加关联设备[RCM]--类型为BIM,无guid,无url"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": None,   
+            "things_id": device_id,
+            "type": "bim",
+            "url":None
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test05_building_model_deviceadd_bim_guid(self):
+        """case05:添加关联设备[RCM]--类型为BIM,有guid,无url"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[3],   
+            "things_id": device_id,
+            "type": "bim",
+            "url":None
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        sql = '''select * from building_model_things where id = '{}';'''.format(res.json()["id"])
+        device_data = opera_db.get_fetchone(sql)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["id"],run_method.errInfo(res))
+        self.assertIsNotNone(device_data,run_method.errInfo(res))
+
+    def test06_building_model_deviceadd_bim_url(self):
+        """case06:添加关联设备[RCM]--类型为BIM,无guid,有url"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": None,   
+            "things_id": device_id,
+            "type": "bim",
+            "url":"https://www.baidu.com"
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test07_building_model_deviceadd_bim_GU(self):
+        """case07:添加关联设备[RCM]--类型为BIM,有guid,有url"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[4],   
+            "things_id": device_id,
+            "type": "bim",
+            "url":"https://www.baidu.com"
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        sql = '''select * from building_model_things where id = '{}';'''.format(res.json()["id"])
+        device_data = opera_db.get_fetchone(sql)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["id"],run_method.errInfo(res))
+        self.assertIsNotNone(device_data,run_method.errInfo(res))
+    
+    def test08_building_model_deviceadd_extra_noUCG(self):
+        """case08:添加关联设备[RCM]--类型为extra，无url,无coord,无guid"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": None,   
+            "things_id": device_id,
+            "type": "extra",
+            "url": None,
+            "coord": None
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test09_building_model_deviceadd_extra_url(self):
+        """case09:添加关联设备[RCM]--类型为extra，无url,无coord,有guid"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[5],   
+            "things_id": device_id,
+            "type": "extra",
+            "url": None,
+            "coord": None
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test10_building_model_deviceadd_extra_url(self):
+        """case10:添加关联设备[RCM]--类型为extra，有url，无coord"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,   
+            "things_id": device_id,
+            "type": "extra",
+            "url": "https://www.baidu.com",
+            "coord": None
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test11_building_model_deviceadd_extra_coord(self):
+        """case11:添加关联设备[RCM]--类型为extra，无url,有coord"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,   
+            "things_id": device_id,
+            "type": "extra",
+            "url": None,
+            "coord": {
+                "altitude": 122,
+                "latitude": 32,
+                "longitude": 0,
+                "angle":0
+                }
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1400,run_method.errInfo(res))
+
+    def test12_building_model_deviceadd_UC(self):
+        """case12:添加关联设备[RCM]--类型为extra，有url,有coord"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,   
+            "things_id": device_id,
+            "type": "extra",
+            "url": "https://www.baidu.com",
+            "coord": {
+                "altitude": 122,
+                "latitude": 32,
+                "longitude": 0,
+                "angle":0
+                }
+            }
+        res = run_method.post(self.api,json=data,headers=corp_header)
+        sql = '''select * from building_model_things where id = '{}';'''.format(res.json()["id"])
+        device_data = opera_db.get_fetchone(sql)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["id"],run_method.errInfo(res))
+        self.assertIsNotNone(device_data,run_method.errInfo(res))
+
+    def test13_building_model_deviceadd_rsm(self):
+        """case13:添加关联设备[RSM]--新增无权限"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[6],   
+            "things_id": device_id,
+            "type": "bim"
+            }
+        res = run_method.post(self.api,json=data,headers=super_header)
+        self.assertEqual(res.status_code,403,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1403,run_method.errInfo(res))
+
+    def test14_building_model_deviceadd_noRole(self):
+        """case14:添加关联设备[普通用户]--新增无权限"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[7],   
+            "things_id": device_id,
+            "type": "bim"
+            }
+        common_user_header = pub_param.common_user(corp_id)
+        res = run_method.post(self.api,json=data,headers=common_user_header)
+        self.assertEqual(res.status_code,403,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1403,run_method.errInfo(res))
+
+    def test15_building_model_deviceadd_otherCorp(self):
+        """case15:添加关联设备[其他组织RCM]--新增无权限"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[8],   
+            "things_id": device_id,
+            "type": "bim"
+            }
+        other_corp_header = pub_param.common_user(role=1<<19)
+        res = run_method.post(self.api,json=data,headers=other_corp_header)
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1403,run_method.errInfo(res))
+
+    def test16_building_model_deviceadd_noAuth(self):
+        """case16:添加关联设备--无Auth"""
+
+        device_id = pub_param.create_device(header=corp_header)
+        data = {
+            "building_id": self.building_id,
+            "guid": self.guidList[9],   
+            "things_id": device_id,
+            "type": "bim"
+            }
+        res = run_method.post(self.api,json=data)
+        self.assertEqual(res.status_code,401,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1401,run_method.errInfo(res))
+
+    @unittest.skip("暂时跳过")
+    def test17_building_model_deviceadd_DelCorpUser(self):
+        """case17:添加关联设备[RCM]--已删除管理员"""
+        pass
+
+class TestBuildingModelDevicelist(unittest.TestCase):
+
+    def setUp(self):
+        self.api = '/building/model/devicelist'
+        self.data = {
+            "page":1,
+            "size":100
+        }
+
+    def test01_building_model_devicelist_noId(self):
+        """case01:获取建筑内所有设备列表--无建筑ID"""
+
+        res = run_method.post(self.api,self.data)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertEqual(res.json()["total"],"0",run_method.errInfo(res))
+        
+
+    def test02_building_model_devicelist_errId(self):
+        """case02:获取建筑内所有设备列表--错误的建筑ID"""
+
+        self.data.update(building_id="abc")
+        res = run_method.post(self.api,self.data)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertEqual(res.json()["total"],"0",run_method.errInfo(res))
+
+    # 依赖 class TestBuildingModelDeviceadd 
+    def test03_building_model_devicelist_success(self):
+        """case03:获取建筑内所有设备列表--查询成功"""
+
+        building_id = opera_json.get_data("deviceadd")["building_id"]
+        self.data.update(building_id=building_id)
+        res = run_method.post(self.api,self.data)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        opera_assert.is_list_in(building_id,res.json()["data_list"],"building_id")

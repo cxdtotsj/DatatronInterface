@@ -33,9 +33,9 @@ class CorpApiData:
 
     @classmethod
     def corp_name(self):
+        time.sleep(1)
         stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100000)
-        corp_name = 'Auto组织名称{}'.format(random_num)
+        corp_name = 'Auto组织名称{}'.format(stamp)
         return corp_name
 
 
@@ -44,9 +44,9 @@ class ZoneApiData:
     @classmethod
     def zone_data(self):
         # /zone/create
+        time.sleep(1)
         stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100000)
-        zone_name = 'Auto园区名称{}'.format(random_num)
+        zone_name = 'Auto园区名称{}'.format(stamp)
         # 园区新增基础 json，缺少 corp_id, extra 字段
         data = {
             "name": zone_name,
@@ -73,9 +73,9 @@ class BuildingApiData:
     @classmethod
     def building_data(self):
         # /zone/create
+        time.sleep(1)
         stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100)
-        building_name = 'Auto建筑名称{}'.format(random_num)
+        building_name = 'Auto建筑名称{}'.format(stamp)
         # 建筑新增基础 json，缺少 zone_id, extra 字段
         data = {
             "name": building_name,
@@ -117,13 +117,25 @@ class ThingsApiData:
     
     @classmethod
     def device_name(self):
+        time.sleep(1)
         stamp = int(time.time())
-        random_num = stamp + random.randint(0, 100000)
-        device_name = 'Auto设备名称{}'.format(random_num)
+        device_name = 'Auto设备名称{}'.format(stamp)
         return device_name
+
+class SceneApiData:
+
+    @classmethod
+    def scene_name(self):
+        time.sleep(1)
+        stamp = int(time.time())
+        scene_name = 'Auto场景名称{}'.format(stamp)
+        return scene_name
+
 
 
 
 if __name__ == '__main__':
-    # a = BuildingApiData()
-    print(BuildingApiData.modelType_sorted())
+    a = SceneApiData()
+    scene_list = [a.scene_name() for i in range(5)]
+    print(scene_list)
+    
