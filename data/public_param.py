@@ -461,13 +461,14 @@ class PublicParam:
             with open(path_file,'rb') as fileop:
                 files = {"file":fileop}
                 r = self.run_method.post(api,data=data,files=files,headers=header)
+                r.raise_for_status()
+                if "err" in r.text:
+                    print("创建building并上传模型返回error")
+                    print(self.run_method.errInfo(r))
+                return r.json(),building_id
         except:
             print("创建building并上传模型失败")
             print(self.run_method.errInfo(r))
-        if "err" in r.text:
-            print("创建building并上传模型返回error")
-            print(self.run_method.errInfo(r))
-        return r.json(),building_id
 
 
     # 获取meta_url页面构件的GUID
@@ -531,7 +532,7 @@ class PublicParam:
     # 获取构件信息
     def get_entity(self,model_id,guid):
         """return entity.json()"""
-        api = 'building/model/entityget'
+        api = '/building/model/entityget'
         data = {
             "model_id":model_id,
             "guid":guid
@@ -544,16 +545,38 @@ class PublicParam:
             print("获取构建信息超时")
             print(self.run_method.errInfo(entity))
 
+    # 获取建筑模型信息
+    def get_building_model(self,building_id,header):
+        """return res.json()"""
+
+        api = '/building/model/list'
+        data = {
+            "building_id":building_id
+        }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print("获取建筑模型信息失败")
+            print(self.run_method.errInfo(res))
+
+
     # 创建设备
-    def create_device(self,data=None,header=None):
+    def create_device(self,data=None,header=None,device_type=None):
         """return device_id"""
         api = '/things/add'
+
+        if device_type is not None:
+            device_type = device_type
+        else:
+            device_type = "TYPE_DEVICE"
         if data is not None:
             data = data
         else:
-            device_name = self.random_name("随机设备名称")
             data = {
-                "device_name":device_name
+                "device_id":self.random_name("随机设备名称"),
+                "device_type":device_type
                 }
         if header is not None:
             user_header = header
@@ -567,9 +590,122 @@ class PublicParam:
             print("新增设备失败")
             print(self.run_method.errInfo(res))
     
+    # 数据库创建 parent 关联设备
+    def create_parent_device(self,header=None,device_num=None):
+        """
+        device_num:需要绑定到网关的设备数量
+        """
+
+        if header is not None:
+            user_header = header
+        else:
+            user_header = self.common_user(role=524288)
+        if device_num is not None:
+            device_num = device_num
+        else:
+            device_num = device_num
+        parent_id = self.create_device(header=user_header,device_type="TYPE_GATEWAY")
+        for _ in range(device_num):
+            device_id = self.create_device(header=user_header)
+            sql = '''UPDATE things SET parent_id = '{}' 
+                    where id = '{}';'''.format(parent_id,device_id)
+            self.opera_db.update_data(sql)
+        return parent_id
+
+    # 查询设备
+    def get_things(self,things_id,header):
+        """return scene_json"""
+
+        api = '/things/get'
+        data = {
+            "id":things_id
+        }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print("获取设备失败")
+            print(self.run_method.errInfo(res))
+
+    # 设备列表
+    def get_things_list(self,header,parent_id=None):
+        """return deviceId_list"""
+
+        api = '/things/list'
+        if parent_id is not None:
+            data = {
+                "parent_id":parent_id,
+                "page":1,
+                "limit":100
+            }
+        else:
+            data = {
+                "page":1,
+                "limit":100
+            }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            data_list = res.json()["data_list"]
+            return [device["id"] for device in data_list]
+        except:
+            print("获取设备列表失败")
+            print(self.run_method.errInfo(res))
+
+    # 获取设备token
+    def get_device_token(self,device_id,header):
+        """return token"""
+
+        api = '/things/token/get'
+        data = {
+            "id":device_id
+        }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()["token"]
+        except:
+            print("获取设备token失败")
+            print(self.run_method.errInfo(res))
+
+    # 解析device_token
+    def analyze_device_token(self,token):
+        """return res.json()"""
+        
+        api = '/token'
+        data = {
+            "token":token
+        }
+        try:
+            res = self.run_method.post(api,data)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print("解析设备token失败")
+            print(self.run_method.errInfo(res))
+    
+    # 插入设备属性 things_data
+    def insert_thingsData(self,corp_id,things_id,attrs_name):
+        """attrs_name必须为可迭代类型"""
+
+        for name in attrs_name:
+            print("插入数据{}".format(name))
+            random_id = int(time.time())
+            create_at = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(random_id))
+            sql = '''INSERT INTO things_data
+                        (id,corp_id,things_id, name, dtype, value, bvalue, svalue, dvalue, create_at) 
+                    VALUES 
+                        ('{}','{}','{}', '{}', '', 0, 0, 0, NULL, '{}');'''.format(
+                            random_id,corp_id,things_id,name,create_at)
+            self.opera_db.insert_data(sql)
+            time.sleep(1)
+        
+    
     # 创建场景
     def create_scene(self,data=None,header=None):
         """return scene_id"""
+
         api = '/scene/create'
         if data is not None:
             data = data
@@ -589,7 +725,7 @@ class PublicParam:
         except:
             print("新增场景失败")
             print(self.run_method.errInfo(res))
-        
+    
     # 获取场景
     def get_scene(self,scene_id):
         """return scene_json"""
@@ -611,5 +747,5 @@ class PublicParam:
 if __name__ == "__main__":
     import time
     bd = PublicParam()
-    name_1 = bd.create_device()
-    print(name_1)
+
+

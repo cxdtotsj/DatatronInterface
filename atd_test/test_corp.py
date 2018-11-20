@@ -29,6 +29,10 @@ opera_assert = OperationAssert()
 opera_db = OperationDB()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
+# 普通用户
+common_user_header = pub_param.common_user(corp_id)
+# 其他组织RCM
+other_corp_header = pub_param.common_user(role=524288)
 
 
 class TestCorpCreate(unittest.TestCase, Corp):
@@ -55,7 +59,6 @@ class TestCorpCreate(unittest.TestCase, Corp):
     def test03_corp_create_noRole(self):
         '''case03[普通用户]:创建组--未授权'''
 
-        common_user_header = pub_param.common_user()
         res = run_method.post(self.api, self.data, common_user_header)
         self.assertEqual(res.status_code, 401, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
@@ -63,8 +66,7 @@ class TestCorpCreate(unittest.TestCase, Corp):
     def test04_corp_create_noRole(self):
         '''case04:创建组[RCM]--未授权'''
 
-        rcm_user_header = pub_param.common_user(role=1 << 19)
-        res = run_method.post(self.api, self.data, rcm_user_header)
+        res = run_method.post(self.api, self.data, corp_header)
         self.assertEqual(res.status_code, 401, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
 
@@ -217,7 +219,6 @@ class TestCorpUserAdd(unittest.TestCase):
 
         api = "/corp/user/add"
         *__, user_id = pub_param.user_reset()
-        common_user_header = pub_param.common_user(corp_id)
         data = {"user_id": user_id}
         res = run_method.post(api, data, headers=common_user_header)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
@@ -247,7 +248,7 @@ class TestCorpUserList(unittest.TestCase):
         api = "/corp/user/list"
         data = {
             "page": 1,
-            "size": 10,
+            "limit": 10,
             "corp_id": None}
         res = run_method.post(api, data, headers=super_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
@@ -259,7 +260,7 @@ class TestCorpUserList(unittest.TestCase):
         api = "/corp/user/list"
         data = {
             "page": 1,
-            "size": 10,
+            "limit": 10,
             "corp_id": "112233"}
         res = run_method.post(api, data, headers=super_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
@@ -271,7 +272,7 @@ class TestCorpUserList(unittest.TestCase):
         api = "/corp/user/list"
         data = {
             "page": 1,
-            "size": 10,
+            "limit": 10,
             "corp_id": corp_id}
         res = run_method.post(api, data)
         self.assertEqual(res.status_code, 401, run_method.errInfo(res))
@@ -283,7 +284,7 @@ class TestCorpUserList(unittest.TestCase):
         api = "/corp/user/list"
         data = {
             "page": 1,
-            "size": 10,
+            "limit": 10,
             "corp_id": corp_id}
         res = run_method.post(api, data, headers=super_header)
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
@@ -298,7 +299,7 @@ class TestCorpUserList(unittest.TestCase):
         api = "/corp/user/list"
         data = {
             "page": 1,
-            "size": 10}
+            "limit": 10}
         res = run_method.post(api, data, headers=corp_header)
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
             corp_id)
@@ -313,7 +314,7 @@ class TestCorpUserList(unittest.TestCase):
         other_corp_id = pub_param.create_corp()
         data = {
             "page": 1,
-            "size": 10,
+            "limit": 10,
             "corp_id": other_corp_id}
         res = run_method.post(api, data, headers=corp_header)
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
@@ -326,10 +327,9 @@ class TestCorpUserList(unittest.TestCase):
         '''cas07:组内用户列表[普通用户]--普通用户查看所在组内用户'''
 
         api = "/corp/user/list"
-        common_user_header = pub_param.common_user(corp_id)
         data = {
             "page": 1,
-            "size": 10}
+            "limit": 10}
         res = run_method.post(api, data, headers=common_user_header)
         sql = '''select id from corp_user where corp_id = '{}' and status = 1;'''.format(
             corp_id)
@@ -346,7 +346,7 @@ class TestCorpList(unittest.TestCase):
         api = "/corp/list"
         data = {
             "page": 1,
-            "size": 10}
+            "limit": 10}
         res = run_method.post(api, data, headers=super_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
@@ -356,7 +356,7 @@ class TestCorpList(unittest.TestCase):
         api = "/corp/list"
         data = {
             "page": 1,
-            "size": 10}
+            "limit": 10}
         res = run_method.post(api, data, headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["data_list"][0]
@@ -368,8 +368,7 @@ class TestCorpList(unittest.TestCase):
         api = "/corp/list"
         data = {
             "page": 1,
-            "size": 10}
-        common_user_header = pub_param.common_user(corp_id)
+            "limit": 10}
         res = run_method.post(api, data, headers=common_user_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["data_list"][0]
@@ -547,7 +546,6 @@ class TestCorpUserDel(unittest.TestCase):
         api = '/corp/user/del'
         *__, user_id = pub_param.user_reset_corp(corp_id, role=1 << 19)
         data = {"user_id": user_id}
-        common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(api, data, headers=common_user_header)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))

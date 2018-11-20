@@ -93,8 +93,16 @@ class OperationAssert:
             for i in range(len(except_list)):
                 assert except_list[i] == res_dict_list[i],"返回的顺序不正确:{}".format(res_dict_list)
 
+    def is_list_eq(self,except_list,receive_list):
+        """判断两个列表的值相等"""
 
+        except_list.sort()
+        receive_list.sort()
+        assert operator.eq(except_list,receive_list),"两个列表不相等{} != {}".format(except_list,receive_list)
 
 
 if __name__ == "__main__":
     assert_result = OperationAssert()
+    a = [1,3,2]
+    b = [2,3,1,4]
+    assert_result.is_list_eq(a,b)

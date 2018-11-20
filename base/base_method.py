@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from base.get_url import GetUrl
 from base.grpc_base_run import GrpcBaseRun
 import json
@@ -39,7 +35,7 @@ class BaseMethod:
         files:
         '''
         url = self.get_url.http_api_url(api)
-        return requests.post(url=url, data=data, json=json, headers=headers, cookies=cookies, files=files)
+        return requests.post(url=url, data=data, json=json, headers=headers, cookies=cookies, files=files,timeout=30)
 
     def get(self, api, data=None, json=None, headers=None, cookies=None):
         '''
@@ -50,8 +46,8 @@ class BaseMethod:
         headers:
         '''
         url = self.get_url.http_api_url(api)
-        return requests.get(url=url,params=data,json=json,headers=headers,cookies=cookies)
-    
+        return requests.get(url=url,params=data,json=json,headers=headers,cookies=cookies,timeout=30)
+
     def errInfo(self,res):
         """
         res: http的response对象
@@ -60,13 +56,11 @@ class BaseMethod:
         if isinstance(res,object):
             return {"err":res.text,"request_id":res.headers["X-Request-Id"]}
 
-
 if __name__ == "__main__":
-    api = "/zone/list"
+    api = "/user/create"
     base = BaseMethod()
-    data = {"page":1,
-            "size":1}
-    res = base.post(api,data)
-    err = base.errInfo(res)
-    print(err)
-    
+    data = {'name': "auto_test03",
+            "password": "123456"}
+    header = {"Authorization": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJTUEVDSUFMLUFETUlOLUlEIiwicm9sIjoxMDczNzQxODI0LCJpYXQiOjE1MzgwMjc4NDAsInNlcyI6ImFiY2QxMjM0In0.F_PxEwGsEITEAkLVInqPMI7kI348LSUx-4n7tqkpg9cRjqroZbe6_Y94euTXT8FnyaSSHDfDFTvzmMmVZje_T4SnVrbQsqHLONrc39kH7iq2Ci9Z7m6Itr5W4qifKFo6RZPh1MMn-Yz2bhc5Dn9fg0ENEA2uQPRgm95eiO0MDUE"}
+    res = base.post(api, data, headers=header)
+    print(res.text)

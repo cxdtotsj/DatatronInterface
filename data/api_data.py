@@ -99,6 +99,7 @@ class BuildingApiData:
 
     file_LangChaV2 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','LangChaV2.objr')
     file_Office = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','Office.objr')
+    file_TPY_7 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','TPY-ZL-A-7F.objr')
 
     # modeltype_list = ['T','S','A','M','E','P','F','C','B']
     modeltype_list = ['T','S','A']
@@ -116,11 +117,11 @@ class BuildingApiData:
 class ThingsApiData:
     
     @classmethod
-    def device_name(self):
+    def device_id(self):
         time.sleep(1)
         stamp = int(time.time())
-        device_name = 'Auto设备名称{}'.format(stamp)
-        return device_name
+        device_id = 'Auto设备名称{}'.format(stamp)
+        return device_id
 
 class SceneApiData:
 

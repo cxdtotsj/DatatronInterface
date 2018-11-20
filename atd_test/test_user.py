@@ -24,6 +24,10 @@ pub_param = PublicParam()
 opera_json = OperetionJson()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
+# 普通用户
+common_user_header = pub_param.common_user(corp_id)
+# 其他组织RCM
+other_corp_header = pub_param.common_user(role=524288)
 
 
 class TestUserCreate(unittest.TestCase, User):
@@ -107,7 +111,6 @@ class TestUserCreate(unittest.TestCase, User):
     def test09_user_create_noRole(self):
         '''case09:创建用户[普通用户]--未授权创建用户'''
 
-        common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(self.api, self.data, headers=common_user_header)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
@@ -140,10 +143,10 @@ class TestUserList(unittest.TestCase):
         self.api = '/user/list'
         self.data = {
             "page": 1,
-            "size": 100}
+            "limit": 100}
 
     def test01_user_list_super(self):
-        '''case01:用户列表--超管查询所有用户（Size最大100）'''
+        '''case01:用户列表--超管查询所有用户（limit最大100）'''
 
         res = run_method.post(self.api, self.data, headers=super_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
@@ -367,8 +370,6 @@ class TestUserPwdReset(unittest.TestCase):
 
         api = '/user/passwd/reset'
 
-        # 创建组织普通用户
-        common_user_header = pub_param.common_user(corp_id)
         # 创建其他组织的用户，返回email
         user_email, *__ = pub_param.user_reset_corp()
         data = {

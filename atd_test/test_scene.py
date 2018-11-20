@@ -1,3 +1,14 @@
+'''
+场景类接口
+
+/scene/create
+/scene/get
+/scene/list
+/scene/update
+/scene/del
+
+'''
+
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,9 +23,14 @@ from data.api_data import SceneApiData as Scene
 
 run_method = BaseMethod()
 pub_param = PublicParam()
+opera_assert = OperationAssert()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
-opera_assert = OperationAssert()
+# 普通用户
+common_user_header = pub_param.common_user(corp_id)
+# 其他组织RCM
+other_corp_header = pub_param.common_user(role=524288)
+
 
 class TestSceneCreate(unittest.TestCase):
 
@@ -51,7 +67,6 @@ class TestSceneCreate(unittest.TestCase):
     def test04_scene_create_noRole(self):
         """case04:创建场景[普通用户]--普通用户新增无权限"""
 
-        common_user_header = pub_param.common_user(corp_id)
         res =run_method.post(self.api,json=self.data,headers=common_user_header)
         self.assertEqual(res.status_code,403,run_method.errInfo(res))
         self.assertEqual(res.json()["code"],1403,run_method.errInfo(res))
@@ -134,7 +149,7 @@ class TestSceneList(unittest.TestCase):
         self.api = '/scene/list'
         self.data = {
             "page":1,
-            "size":100
+            "limit":100
         }
 
     def test01_scene_list_rsm(self):
@@ -146,7 +161,7 @@ class TestSceneList(unittest.TestCase):
 
     def test02_scene_list_noRole(self):
         """case01:场景列表[普通用户]--普通用户查询"""
-        common_user_header = pub_param.common_user(corp_id)
+
         res = run_method.post(self.api,self.data,headers=common_user_header)
         self.assertEqual(res.status_code,403,run_method.errInfo(res))
         self.assertEqual(res.json()["code"],1403,run_method.errInfo(res))
@@ -229,7 +244,6 @@ class TestSceneUpdate(unittest.TestCase):
 
         data = pub_param.get_scene(self.scene_id)
         data.update(name = Scene.scene_name())
-        common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(self.api,json=data,headers=common_user_header)
         new_data = pub_param.get_scene(self.scene_id)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
@@ -241,8 +255,7 @@ class TestSceneUpdate(unittest.TestCase):
 
         data = pub_param.get_scene(self.scene_id)
         data.update(name = Scene.scene_name())
-        otherCorp_header = pub_param.common_user(role=1<<19)
-        res = run_method.post(self.api,json=data,headers=otherCorp_header)
+        res = run_method.post(self.api,json=data,headers=other_corp_header)
         new_data = pub_param.get_scene(self.scene_id)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"],1403,run_method.errInfo(res))
@@ -278,7 +291,6 @@ class TestSceneDel(unittest.TestCase):
         data = {
             "id":self.scene_id
         }
-        common_user_header = pub_param.common_user(corp_id)
         res = run_method.post(self.api,data,headers=common_user_header)
         new_data = pub_param.get_scene(self.scene_id)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
@@ -291,8 +303,7 @@ class TestSceneDel(unittest.TestCase):
         data = {
             "id":self.scene_id
         }
-        otherCorp_header = pub_param.common_user(role=1<<19)
-        res = run_method.post(self.api,data,headers=otherCorp_header)
+        res = run_method.post(self.api,data,headers=other_corp_header)
         new_data = pub_param.get_scene(self.scene_id)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(new_data["status"], 3, run_method.errInfo(res))
