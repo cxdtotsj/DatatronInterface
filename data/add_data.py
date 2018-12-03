@@ -28,7 +28,7 @@ class AddData():
     def add_device(self):
         api = '/things/add'
         data = {
-            "device_name": Things.device_name()
+            "device_name": Things.device_id()
         }
         try:
             res = run_method.post(api, data, headers=corp_header)
@@ -45,7 +45,7 @@ class AddData():
 
     def get_entities(self, meta_url):
         """输入 meta_url,返回 entities"""
-        for i in range(6):
+        for _ in range(6):
             r = requests.get(meta_url)
             if r.status_code == 200:
                 break
