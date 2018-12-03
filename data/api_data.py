@@ -17,12 +17,14 @@ class UserApiData:
 
     @classmethod
     def user_email(self):
-        user_email = "auto{}@auto.com".format(random.randint(100000, 999999))
+        rd5 = random.randint(10000,99999)
+        rd6 = random.randint(100000, 999999)
+        user_email = "auto{}_{}@auto.com".format(rd5,rd6)
         return user_email
 
     @classmethod
     def user_mobile(self):
-        user_mobile = random.randint(10000000000,19999999999)
+        user_mobile = random.randint(10000000000,99999999999)
         return user_mobile
 
     oldpasswd = "123456"
@@ -35,7 +37,8 @@ class CorpApiData:
     def corp_name(self):
         time.sleep(1)
         stamp = int(time.time())
-        corp_name = 'Auto组织名称{}'.format(stamp)
+        rd5 = random.randint(10000,99999)
+        corp_name = 'Auto组织名称{}_{}'.format(stamp,rd5)
         return corp_name
 
 
@@ -46,7 +49,8 @@ class ZoneApiData:
         # /zone/create
         time.sleep(1)
         stamp = int(time.time())
-        zone_name = 'Auto园区名称{}'.format(stamp)
+        rd5 = random.randint(10000,99999)
+        zone_name = 'Auto园区名称{}_{}'.format(stamp,rd5)
         # 园区新增基础 json，缺少 corp_id, extra 字段
         data = {
             "name": zone_name,
@@ -75,7 +79,8 @@ class BuildingApiData:
         # /zone/create
         time.sleep(1)
         stamp = int(time.time())
-        building_name = 'Auto建筑名称{}'.format(stamp)
+        rd5 = random.randint(10000,99999)
+        building_name = 'Auto建筑名称{}_{}'.format(stamp,rd5)
         # 建筑新增基础 json，缺少 zone_id, extra 字段
         data = {
             "name": building_name,
@@ -120,7 +125,8 @@ class ThingsApiData:
     def device_id(self):
         time.sleep(1)
         stamp = int(time.time())
-        device_id = 'Auto设备名称{}'.format(stamp)
+        rd5 = random.randint(10000,99999)
+        device_id = 'Auto设备名称{}_{}'.format(stamp,rd5)
         return device_id
 
 class SceneApiData:
@@ -129,7 +135,8 @@ class SceneApiData:
     def scene_name(self):
         time.sleep(1)
         stamp = int(time.time())
-        scene_name = 'Auto场景名称{}'.format(stamp)
+        rd5 = random.randint(10000,99999)
+        scene_name = 'Auto场景名称{}_{}'.format(stamp,rd5)
         return scene_name
 
 

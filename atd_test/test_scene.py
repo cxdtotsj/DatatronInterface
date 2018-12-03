@@ -13,17 +13,17 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from data.api_data import BuildingApiData as Building
 from base.base_method import BaseMethod
 from data.public_param import PublicParam
-import unittest
 from util.operation_assert import OperationAssert
+from util.operation_db import OperationDB
 from data.api_data import SceneApiData as Scene
-
+import unittest
 
 run_method = BaseMethod()
 pub_param = PublicParam()
 opera_assert = OperationAssert()
+opera_db = OperationDB()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
 # 普通用户
@@ -323,3 +323,62 @@ class TestSceneDel(unittest.TestCase):
     def test05_scene_del_delCorpUser(self):
         """case05:场景删除--已删除RCM删除无权限"""
         pass
+
+class TestSceneModelurllist(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        building_id = pub_param.create_sign_building(header=corp_header)
+        cls.models = []
+        for _ in range(3):
+            model_res,__ = pub_param.building_model_upload(building_id,corp_header)
+            cls.models.append(model_res["model_id"])
+
+    def setUp(self):
+        self.api = '/scene/modelurllist'
+        self.data = {
+            "models":None
+        }
+
+    def test01_scene_modelurllist_noId(self):
+        """case01:场景模型url列表--无模型ID"""
+
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["midURL"],{},run_method.errInfo(res))
+    
+    def test02_scene_modelurllist_oneId(self):
+        """case02:场景模型url列表--一个模型ID"""
+        
+        mid = self.models[:1]   # 取第一个model_id
+        self.data.update(models=mid)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["midURL"]),1,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["midURL"][mid[0]],run_method.errInfo(res))
+
+    def test03_scene_modelurllist_multId(self):
+        """case03:场景模型url列表--多个模型ID"""
+
+        self.data.update(models=self.models)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["midURL"]),3,run_method.errInfo(res))
+        self.assertEqual(len(res.json()["midURL"].values()),3,run_method.errInfo(res))
+
+    def test04_scene_modelurllist_disableId(self):
+        """case04:场景模型url列表--存在停用的建筑"""
+
+        building_id = pub_param.create_sign_building(header=corp_header)
+        models = []
+        model_res,__ = pub_param.building_model_upload(building_id,corp_header)
+        models.append(model_res["model_id"])        # 停用建筑的models
+        model_list = self.models + models           # 合并启用建筑和停用建筑
+        sql = '''update building set status = 2 where id = '{}';'''.format(building_id) 
+        opera_db.update_data(sql)   # 停用建筑
+        self.data.update(models=model_list)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["midURL"]),3,run_method.errInfo(res))
+        self.assertEqual(len(res.json()["midURL"].values()),3,run_method.errInfo(res))
+

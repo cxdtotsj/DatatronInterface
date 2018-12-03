@@ -72,11 +72,11 @@ class OperationAssert:
         for each in value_list:
             assert each == except_value,"存在其他的返回值"
     
-    def is_list_equal(self,except_list,receive_list,receive_key):
+    def is_list_equal(self,except_list,receive_list,receive_key,msg=None):
         '''receive_list 为一个存储 字典 的列表，判断except_list等于 receive_list字典中的某个key的value值'''
 
         res_dict_list = [i[receive_key] for i in receive_list]
-        assert except_list == res_dict_list,"两个列表不相等"
+        assert except_list == res_dict_list,msg
 
     # 和 is_equal_value 一致，后面全部使用这个
     def is_list_in(self,except_value,receive_list,receive_key): 
@@ -93,16 +93,16 @@ class OperationAssert:
             for i in range(len(except_list)):
                 assert except_list[i] == res_dict_list[i],"返回的顺序不正确:{}".format(res_dict_list)
 
-    def is_list_eq(self,except_list,receive_list):
+    def is_list_eq(self,except_list,receive_list,msg=None):
         """判断两个列表的值相等"""
 
         except_list.sort()
         receive_list.sort()
-        assert operator.eq(except_list,receive_list),"两个列表不相等{} != {}".format(except_list,receive_list)
+        assert operator.eq(except_list,receive_list),msg
 
 
 if __name__ == "__main__":
     assert_result = OperationAssert()
     a = [1,3,2]
     b = [2,3,1,4]
-    assert_result.is_list_eq(a,b)
+    assert_result.is_list_eq(a,b,"123")

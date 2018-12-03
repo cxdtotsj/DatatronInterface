@@ -163,7 +163,7 @@ class TestCorpUserAdd(unittest.TestCase):
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         opera_assert.is_list_equal(
-            [user_one, user_two], res.json()["users"], "id")
+            [user_one, user_two], res.json()["users"], "id",run_method.errInfo(res))
 
     def test08_corp_user_add_noCorpId(self):
         '''case08:用户添加到组[RCM]--未传组ID(暂不考虑管理员同时在两个组)'''
@@ -237,7 +237,7 @@ class TestCorpUserAdd(unittest.TestCase):
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["id"], corp_id, run_method.errInfo(res))
         opera_assert.is_list_equal(
-            [user_one, user_two], res.json()["users"], "id")
+            [user_one, user_two], res.json()["users"], "id",run_method.errInfo(res))
 
 
 class TestCorpUserList(unittest.TestCase):

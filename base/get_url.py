@@ -15,7 +15,7 @@ class GetUrl:
         base_url = base.setting.http_base_url
         if not base_url:
             raise RuntimeError("no url been set")
-        url = "{0}{1}".format(base_url, url_params)
+        url = "{0}{1}?debug=1".format(base_url, url_params)
         return url
 
     def get_url(

@@ -56,6 +56,24 @@ class PublicParam:
         except:
             print(self.run_method.errInfo(res))
 
+    # 获取 登录 账号 token
+    def user_login(self,passwd,email=None,mobile=None):
+        """返回 header Authorization"""
+        
+        api = "/user/login"
+        data = {
+            "email":email,
+            "mobile":mobile,
+            "password":passwd
+        }
+        try:
+            res = self.run_method.post(api, data)
+            res.raise_for_status()
+            token = res.json()["token"]
+            return {"Authorization":token}
+        except:
+            print(self.run_method.errInfo(res))
+
 
     # 公司管理员 header
     def get_corp_user(self):
@@ -74,35 +92,49 @@ class PublicParam:
         return "X-Request-Id : %s" % res.headers["X-Request-Id"]
  
     def stamp_random_CEM(self):
-        """时间戳和随机数生成 corp_name、random_email、random_mobile、zone_name、building_name"""
+        """时间戳和随机数生成 corp_name、random_email、random_mobile"""
         time.sleep(2)
         stamp = int(time.time())
+        rd5 = random.randint(0,10000)
 
         corp_name = "随机组织名称{}".format(stamp)
-        random_email = "rd{}@random.com".format(stamp)
-        random_mobile = random.randint(10000000000, 19999999999)
-        zone_name = "随机园区名称{}".format(stamp)
-        building_name = "随机建筑名称{}".format(stamp)
-        sql = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
-        sql_mobile = self.opera_db.get_fetchone(sql)
+        random_email = "erd{}_{}@random.com".format(stamp,rd5)
+        random_mobile = random.randint(10000000000, 99999999999)
+
         # 判断随机生成的 mobile 是否已存在
+        sql_p = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
+        sql_mobile = self.opera_db.get_fetchone(sql_p)
         while sql_mobile is not None:
-            random_mobile = random.randint(10000000000, 19999999999)
-            sql = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
-            sql_mobile = self.opera_db.get_fetchone(sql)
-        return corp_name,random_email,random_mobile,zone_name,building_name
+            random_mobile = random.randint(10000000000, 99999999999)
+            sql_p2 = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
+            sql_mobile = self.opera_db.get_fetchone(sql_p2)
+
+        # 判断 email 是否重复
+        sql_e = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
+        sql_email = self.opera_db.get_fetchone(sql_e)
+        while sql_email is not None:
+            time.sleep(1)
+            stamp1 = int(time.time())
+            rd6 = random.randint(0,100000)
+            random_mobile = "rm{}_{}@timestamp.com".format(stamp1,rd6)
+            sql_e2 = '''select mobile from user where email = '{}';'''.format(random_mobile)
+            sql_email = self.opera_db.get_fetchone(sql_e2)
+            
+        return corp_name,random_email,random_mobile
 
     def random_name(self,name,num=None):
         """num=None,return random_name;
            num=int,return []
         """
-        time.sleep(2)
+
+        time.sleep(1)
         stamp = int(time.time())
+        rd5 = random.randint(0,10000)
 
         if num is None:
-            random_name = '{}{}'.format(name,stamp)
+            random_name = '{}{}_{}'.format(name,stamp,rd5)
         else:
-            random_name = ['{}-{}{}'.format(i,name,stamp) for i in range(num)]
+            random_name = ['{}_{}{}_{}'.format(i,name,stamp,rd5) for i in range(num)]
         return random_name
 
 
@@ -126,11 +158,12 @@ class PublicParam:
     # 创建公司
     def create_corp(self, corp_name=None):
         '''返回 corp_id'''
+
         api = "/corp/create"
         if corp_name is not None:
             corp_name = corp_name
         else:
-            corp_name,*__ = self.stamp_random_CEM()
+            corp_name = self.random_name("rd组织")
         data = {"name": corp_name}
         try:
             res = self.run_method.post(
@@ -225,7 +258,7 @@ class PublicParam:
     def common_user(self, corp_id=None, role=None):
         '''自动生成email、mobile,返回user_header, 组织管理员 role=1<<19'''
 
-        corp_name,random_email,random_mobile,*__ = self.stamp_random_CEM()
+        corp_name,random_email,*__ = self.stamp_random_CEM()
         user_name = "随机生成用户"
         oldpasswd = "123456"
         newpasswd = "12345678"
@@ -235,7 +268,7 @@ class PublicParam:
             corp_id = self.create_corp(corp_name)
         # 新增用户
         user_id = self.create_user(
-            user_name, oldpasswd, email=random_email, mobile=random_mobile)
+            user_name, oldpasswd, email=random_email)
         # 用户绑定到组织
         self.user_add_corp(user_id, corp_id=corp_id, role=role)
         # 用户重置密码
@@ -303,7 +336,7 @@ class PublicParam:
         if data is not None:
             data = data
         else:
-            *__,zone_name,__ = self.stamp_random_CEM()
+            zone_name = self.random_name("rd园区")
             data = {
                 "name": zone_name,
                 "area": 1000,
@@ -335,8 +368,9 @@ class PublicParam:
     # 当传入 zone_id,未传入 header 时，传入的 zone_id 无效
     def create_building(self, zone_id=None, header=None, is_belong_zone=True):
         '''返回建筑ID'''
+
         api = '/building/create'
-        *__,building_name,__ = self.stamp_random_CEM()
+        building_name = self.random_name("rd建筑")
 
         data = {
             "name": building_name,
@@ -380,7 +414,7 @@ class PublicParam:
         if data is not None:
             data = data
         else:
-            *__,building_name,__ = self.stamp_random_CEM()
+            building_name = self.random_name("rd独栋建筑")
             data = {
                 "name": building_name,
                 "loc": {
@@ -436,7 +470,7 @@ class PublicParam:
             print(self.run_method.errInfo(res))
     
     # 创建building，并上传模型
-    def building_model_upload(self,building_id=None,header=None,model_type=None,filename=None):
+    def building_model_upload(self,building_id=None,header=None,model_type=None,filename=None,model_name=None):
         "return r.json(),building_id"
 
         if building_id is not None:
@@ -451,11 +485,16 @@ class PublicParam:
             filename=filename
         else:
             filename = 'Office.objr'
+        if model_name is not None:
+            model_name = model_name
+        else:
+            model_name = "其他模型"
         api = "/building/model/upload"
         path_file = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig',filename)
         data = {
                 "building_id" :building_id,
-                "model_type":model_type
+                "model_type":model_type,
+                "model_name":model_name
             }
         try:
             with open(path_file,'rb') as fileop:
@@ -504,15 +543,16 @@ class PublicParam:
 
     # 获取 entities 的 guidList
     def get_guidList(self, building_id,header=None,filename=None):
-        """返回 guidList"""
+        """返回 guidList,model_id"""
         # 上传建筑模型
         r, __ = self.building_model_upload(
             building_id=building_id, header=header,filename=filename)
         meta_url = r["meta_url"]
+        model_id = r["model_id"]
         # 获取entities
         entities = self.get_entities(meta_url)
         guidList = [entity["Guid"] for entity in entities]
-        return guidList
+        return guidList,model_id
 
     # 获取更新后的meta_url 页面返回的更新后的 Entities
     def get_update_entities(self,meta_url,old_guid):
@@ -607,7 +647,7 @@ class PublicParam:
         parent_id = self.create_device(header=user_header,device_type="TYPE_GATEWAY")
         for _ in range(device_num):
             device_id = self.create_device(header=user_header)
-            sql = '''UPDATE things SET parent_id = '{}' 
+            sql = '''UPDATE things SET parent_id = '{}',device_type=0 
                     where id = '{}';'''.format(parent_id,device_id)
             self.opera_db.update_data(sql)
         return parent_id
@@ -690,7 +730,6 @@ class PublicParam:
         """attrs_name必须为可迭代类型"""
 
         for name in attrs_name:
-            print("插入数据{}".format(name))
             random_id = int(time.time())
             create_at = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(random_id))
             sql = '''INSERT INTO things_data
@@ -747,5 +786,7 @@ class PublicParam:
 if __name__ == "__main__":
     import time
     bd = PublicParam()
+    cid = bd.create_corp()
+    print(cid)
 
 

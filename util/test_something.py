@@ -32,7 +32,7 @@ import os
 # print(a)
 #
 # # 时间戳转换成时间
-# c = time.localtime(a)
+# c = time.localtime(1542875030)
 # d = time.strftime("%Y-%m-%d %H:%M:%S",c)
 # print(d)
 
@@ -143,15 +143,20 @@ import os
 #     assert except_value in texts,"this is  except_value : ...{}...,\n this is texts : ...{}...".format(except_value,texts)
 
 
-test_id = 123
+# test_id = 123
 
-class testAr:
+# class testAr:
 
-    def testar(self):
+#     def testar(self):
 
-        test_id = 456
-        print(test_id)
+#         test_id = 456
+#         print(test_id)
 
-if __name__ == '__main__':
-    ar = testAr()
-    ar.testar()
+# if __name__ == '__main__':
+#     ar = testAr()
+#     ar.testar()
+
+import uuid
+
+a = uuid.uuid4
+print(a)

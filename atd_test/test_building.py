@@ -41,7 +41,6 @@ common_user_header = pub_param.common_user(corp_id)
 other_corp_header = pub_param.common_user(role=524288)
 
 
-
 class TestBuildingCreate(unittest.TestCase):
 
     def test01_building_create_noName(self):
@@ -201,8 +200,7 @@ class TestBuildingCreate(unittest.TestCase):
         data = Building.building_data()
         data.update(name=repeat_name)
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
-        self.assertEqual(res.json()["code"], 1409, run_method.errInfo(res))
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     # 依赖用例 test09_building_create_success
     def test12_building_create_nameRepeat(self):
@@ -218,8 +216,7 @@ class TestBuildingCreate(unittest.TestCase):
             "zone_id": building_detail["zone_id"]
         })
         res = run_method.post(api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
-        self.assertEqual(res.json()["code"], 1409, run_method.errInfo(res))
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
 
     # 依赖用例 test09_building_create_success
     def test13_building_create_nameRepeat(self):
@@ -405,11 +402,7 @@ class TestBuildingList(unittest.TestCase):
         data = {"page": 1,
                 "limit": 100}
         res = run_method.post(api, data, headers=super_header)
-        sql = '''select id as total from building where status != 3;'''
-        building_num = opera_db.get_effect_row(sql)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(res.json()["total"], str(
-            building_num), run_method.errInfo(res))
 
     def test04_building_list_noRole(self):
         '''case04:建筑列表--组织普通用户'''
@@ -459,17 +452,6 @@ class TestBuildingUpdate(unittest.TestCase):
         cls.building_id = pub_param.create_sign_building(
             building_data, corp_header)
 
-    def test01_building_update_noName(self):
-        '''case01:编辑建筑[RCM]--无名称'''
-
-        api = '/building/update'
-        data = pub_param.building_get(self.building_id, corp_header)
-        data.update(name=None)
-        res = run_method.post(api, json=data, headers=corp_header)
-        new_data = pub_param.building_get(self.building_id, corp_header)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertNotEqual(new_data["name"], '', "建筑名称被更新为NULL")
-
     def test02_building_update_nameRepeat(self):
         '''case02:编辑建筑[RCM]--重复名称'''
 
@@ -481,15 +463,15 @@ class TestBuildingUpdate(unittest.TestCase):
         bud_one_name = pub_param.building_get(bud_one_id, corp_header)[
             "name"]    # 获取独栋建筑一 name
         bud_two_data = pub_param.building_get(
-            bud_one_id, corp_header)            # 获取独栋建筑二 data
+            bud_two_id, corp_header)            # 获取独栋建筑二 data
         # 更新独栋建筑二的 name,和第一栋建筑一致
         bud_two_data.update(name=bud_one_name)
         res = run_method.post(api, json=bud_two_data, headers=corp_header)
         bud_two_new_data = pub_param.building_get(bud_two_id, corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        # 第二栋更新后的name和建筑一不一致
-        self.assertNotEqual(
-            bud_two_new_data["name"], bud_one_name, "建筑名称更新为重复")
+        # 第二栋更新后的name和建筑一一致
+        self.assertEqual(
+            bud_two_new_data["name"], bud_one_name, "建筑名称更新未成功")
 
     def test03_building_update_area(self):
         '''case03:编辑建筑[RCM]--更新面积'''
@@ -713,74 +695,62 @@ class TestBuildingModelUpload(unittest.TestCase):
     def setUpClass(cls):
         cls.building_id = pub_param.create_building(header=corp_header)
 
+    def setUp(self):
+        self.api = '/building/model/upload'
+        self.data = {
+            "building_id": self.building_id,
+            "model_type": "T",
+            "model_name": "模型上传测试"
+        }
+
     def test01_building_model_upload_noBuildingId(self):
         """case01:上传建筑模型[RCM]--无建筑ID"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": None,
-            "mt": "T"
-        }
+        self.data.update(building_id=None)
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=corp_header)
+                self.api, self.data, files=files, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test02_building_model_upload_errBuildingId(self):
         """case02:上传建筑模型[RCM]--错误的建筑ID"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": "112233",
-            "model_type": "T"
-        }
+        self.data.update(building_id="112233")
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=corp_header)
+                self.api, self.data, files=files, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1404, run_method.errInfo(res))
 
     def test03_building_model_upload_noModelType(self):
         """case03:上传建筑模型[RCM]--无建筑物类型"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": self.building_id
-        }
+        self.data.update(model_type=None)
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=corp_header)
+                self.api, self.data, files=files, headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotIn("err", res.json(), run_method.errInfo(res))
 
     def test04_building_model_upload_errModelType(self):
         """case04:上传建筑模型[RCM]--错误的建筑物类型"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": self.building_id,
-            "model_type": "ZSS"
-        }
+        self.data.update(model_type="ZSS")
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=corp_header)
+                self.api, self.data, files=files, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
     def test05_building_model_upload_noFile(self):
         """case05:上传建筑模型[RCM]--无模型文件"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": self.building_id,
-            "model_type": "T"
-        }
-        res = run_method.post(api, data, headers=corp_header)
+        res = run_method.post(self.api, self.data, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
@@ -804,46 +774,32 @@ class TestBuildingModelUpload(unittest.TestCase):
     def test07_building_model_upload_rsm(self):
         """case07:上传建筑模型[RSM]--RSM上传建筑模型"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": self.building_id,
-            "model_type": "T"
-        }
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=super_header)
+                self.api, self.data, files=files, headers=super_header)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test08_building_model_upload_noRole(self):
         """case08:上传建筑模型[普通用户]--普通用户上传建筑模型"""
 
-        api = '/building/model/upload'
-        data = {
-            "building_id": self.building_id,
-            "model_type": "T"
-        }
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=common_user_header)
+                self.api, self.data, files=files, headers=common_user_header)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
     def test09_building_model_upload_OtherCorp(self):
         """case09:上传建筑模型[RCM]--RCM上传其他组织的建筑模型"""
 
-        api = '/building/model/upload'
         building_id = pub_param.create_building()
-        data = {
-            "building_id": building_id,
-            "model_type": "T"
-        }
+        self.data.update(building_id=building_id)
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
-                api, data, files=files, headers=corp_header)
+                self.api, self.data, files=files, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
@@ -859,14 +815,16 @@ class TestBuildingModelUpdate(unittest.TestCase):
             header=corp_header, model_type="A")
         res_models = pub_param.get_building_model(cls.building_id, corp_header)
         cls.model_id = res_models["data_list"][0]["id"]
-        cls.model_name = res_models["data_list"][0]["model_name"].split("|")[1]
+        cls.file_name = res_models["data_list"][0]["file_name"].split("|")[1]
         cls.model_type = res_models["data_list"][0]["model_type"]
+        cls.model_name = res_models["data_list"][0]["model_name"]
 
     def setUp(self):
         self.api = '/building/model/update'
         self.data = {
             "model_id": self.model_id,
-            "model_type": "T"
+            "model_type": "T",
+            "model_name": "更新后模型"
         }
 
     def test01_building_model_update_rsm(self):
@@ -874,8 +832,7 @@ class TestBuildingModelUpdate(unittest.TestCase):
 
         with open(Building.file_Office, 'rb') as fileop:
             files = {"file": fileop}
-            res = run_method.post(self.api, self.data,
-                                  files=files, headers=super_header)
+            res = run_method.post(self.api, self.data, files=files,headers=super_header)
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
@@ -931,16 +888,22 @@ class TestBuildingModelUpdate(unittest.TestCase):
 
     def test06_building_model_update_noModelFile(self):
         """case06:更新建筑模型[RCM]--无模型文件"""
-        
-        files = {"file":None}
-        res = run_method.post(self.api,self.data,files=files,headers=corp_header)
+
+        files = {"file": None}
+        res = run_method.post(self.api, self.data,
+                              files=files, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
 
     def test07_building_model_update_success(self):
         """case07:更新建筑模型[RCM]--更新成功(模型文件)"""
-        
-        self.data.update(model_type="B")
+
+        self.data.update(
+            {
+                "model_type": "B",
+                "model_name": "第二次更新"
+            }
+        )
         with open(Building.file_TPY_7, 'rb') as fileop:
             files = {"file": fileop}
             res = run_method.post(
@@ -950,31 +913,20 @@ class TestBuildingModelUpdate(unittest.TestCase):
         # 获取更新后的model信息
         model_res = pub_param.get_building_model(self.building_id, corp_header)
         if int(model_res["total"]) == 1:    # 判断是否新上传文件
-            meta_url = res.json()["meta_url"]
             m_type = model_res["data_list"][0]["model_type"]
-            m_name = model_res["data_list"][0]["model_name"].split("|")[1]
+            try:
+                m_file = model_res["data_list"][0]["file_name"].split("|")[1]
+            except IndexError:
+                print("获取模型文件名失败，返回的model_list:{}".format(model_res))
+            m_name = model_res["data_list"][0]["model_name"]
             self.assertNotEqual(self.model_type, m_type,
                                 "模型类型未更新,model_id : {}".format(self.model_id))
+            self.assertNotEqual(self.file_name, m_file,
+                                "模型文件名未更新,model_id : {}".format(self.model_id))
             self.assertNotEqual(self.model_name, m_name,
                                 "模型名称未更新,model_id : {}".format(self.model_id))
         else:
-            print("模型未更新,新增模型文件,model_id : {}".format(self.model_id)) 
-        opera_json.check_json_value("test07_building_model_update",meta_url)
-
-    def test08_building_model_model_entityget_update(self):
-        """case08:获取构件信息[RCM]--获取更新后的构件信息"""
-
-        # 获取更新前的building_id model_id guid
-        old_res, building_id = pub_param.building_model_upload(
-            header=corp_header)
-        old_metaUrl = old_res["meta_url"]
-        old_guid = pub_param.get_guid(old_metaUrl)
-        # 更新 model
-        new_res, __ = pub_param.building_model_upload(
-            building_id=building_id, header=corp_header, filename='TPY-ZL-A-7F.objr')
-        new_metaUrl = new_res["meta_url"]
-        entities = pub_param.get_update_entities(new_metaUrl, old_guid)
-        self.assertNotIn(old_guid, [i["Guid"] for i in entities], "Guid未更新")
+            print("模型未更新,新增模型文件,model_id : {}".format(self.model_id))
 
 
 class TestBuildingModelList(unittest.TestCase):
@@ -1143,20 +1095,20 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.api = '/building/model/deviceadd'
-        cls.building_id = pub_param.create_building(header=corp_header)
-        cls.guidList = pub_param.get_guidList(
-            cls.building_id, corp_header, "LangChaV2.objr")[:20]
+        building_id = pub_param.create_building(header=corp_header)
+        cls.guidList,cls.model_id = pub_param.get_guidList(
+            building_id, corp_header, "LangChaV2.objr")[:20]
 
         # use to class devicelist
         opera_json.check_json_value(
-            "deviceadd", {"building_id": cls.building_id})
+            "deviceadd", {"model_id": cls.model_id})
 
     def test01_building_model_deviceadd_noBuildingId(self):
         """case01:添加关联设备[RCM]--无建筑ID"""
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": None,
+            "model_id": None,
             "guid": self.guidList[0],
             "things_id": device_id,
             "type": "bim"
@@ -1169,7 +1121,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
         """case02:添加关联设备[RCM]--无设备ID"""
 
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[1],
             "things_id": None,
             "type": "bim"
@@ -1183,7 +1135,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[2],
             "things_id": device_id,
             "type": None
@@ -1197,7 +1149,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": None,
             "things_id": device_id,
             "type": "bim",
@@ -1212,17 +1164,17 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[3],
             "things_id": device_id,
             "type": "bim",
             "url": None
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         sql = '''select * from building_model_things where id = '{}';'''.format(res.json()[
                                                                                 "id"])
         device_data = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertIsNotNone(res.json()["id"], run_method.errInfo(res))
         self.assertIsNotNone(device_data, run_method.errInfo(res))
 
@@ -1231,7 +1183,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": None,
             "things_id": device_id,
             "type": "bim",
@@ -1246,17 +1198,17 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[4],
             "things_id": device_id,
             "type": "bim",
             "url": "https://www.baidu.com"
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         sql = '''select * from building_model_things where id = '{}';'''.format(res.json()[
                                                                                 "id"])
         device_data = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertIsNotNone(res.json()["id"], run_method.errInfo(res))
         self.assertIsNotNone(device_data, run_method.errInfo(res))
 
@@ -1265,7 +1217,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": None,
             "things_id": device_id,
             "type": "extra",
@@ -1281,7 +1233,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[5],
             "things_id": device_id,
             "type": "extra",
@@ -1297,7 +1249,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "things_id": device_id,
             "type": "extra",
             "url": "https://www.baidu.com",
@@ -1312,7 +1264,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "things_id": device_id,
             "type": "extra",
             "url": None,
@@ -1332,7 +1284,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "things_id": device_id,
             "type": "extra",
             "url": "https://www.baidu.com",
@@ -1344,10 +1296,10 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
             }
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         sql = '''select * from building_model_things where id = '{}';'''.format(res.json()[
                                                                                 "id"])
         device_data = opera_db.get_fetchone(sql)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertIsNotNone(res.json()["id"], run_method.errInfo(res))
         self.assertIsNotNone(device_data, run_method.errInfo(res))
 
@@ -1356,7 +1308,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[6],
             "things_id": device_id,
             "type": "bim"
@@ -1370,7 +1322,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[7],
             "things_id": device_id,
             "type": "bim"
@@ -1384,7 +1336,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[8],
             "things_id": device_id,
             "type": "bim"
@@ -1398,7 +1350,7 @@ class TestBuildingModelDeviceadd(unittest.TestCase):
 
         device_id = pub_param.create_device(header=corp_header)
         data = {
-            "building_id": self.building_id,
+            "model_id": self.model_id,
             "guid": self.guidList[9],
             "things_id": device_id,
             "type": "bim"
@@ -1432,7 +1384,7 @@ class TestBuildingModelDevicelist(unittest.TestCase):
     def test02_building_model_devicelist_errId(self):
         """case02:获取建筑内所有设备列表--错误的建筑ID"""
 
-        self.data.update(building_id="abc")
+        self.data.update(model_id="abc")
         res = run_method.post(self.api, self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["total"], "0", run_method.errInfo(res))
@@ -1441,10 +1393,73 @@ class TestBuildingModelDevicelist(unittest.TestCase):
     def test03_building_model_devicelist_success(self):
         """case03:获取建筑内所有设备列表--查询成功"""
 
-        building_id = opera_json.get_data("deviceadd")["building_id"]
-        self.data.update(building_id=building_id)
+        model_id = opera_json.get_data("deviceadd")["model_id"]
+        self.data.update(model_id=model_id)
         res = run_method.post(self.api, self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotEqual(res.json()["total"], "0", run_method.errInfo(res))
-        opera_assert.is_list_in(building_id, res.json()[
-                                "data_list"], "building_id")
+        opera_assert.is_list_in(model_id, res.json()[
+                                "data_list"], "model_id")
+
+
+class TestBuildingModelNameupdate(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        res, cls.building_id = pub_param.building_model_upload(
+            header=corp_header)
+        cls.model_id = res["model_id"]
+
+    def setUp(self):
+        self.api = '/building/model/nameupdate'
+        self.data = {
+            "id": self.model_id,
+            "model_name": "更新后模型名称"
+        }
+
+    def test01_building_model_nameupdate_noModelId(self):
+        """case01:编辑模型名称[RCM]--无模型ID"""
+
+        self.data.update(id=None)
+        res = run_method.post(self.api, self.data, headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+    def test02_building_model_nameupdate_noModelName(self):
+        """case02:编辑模型名称[RCM]--无模型名称"""
+
+        self.data.update(model_name=None)
+        res = run_method.post(self.api, self.data, headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+    def test03_building_model_nameupdate_rsm(self):
+        """case03:编辑模型名称[RSM]--更新受限"""
+
+        res = run_method.post(self.api, self.data, headers=super_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test04_building_model_nameupdate_noRole(self):
+        """case04:编辑模型名称[普通用户]--更新受限"""
+
+        res = run_method.post(self.api, self.data, headers=common_user_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test05_building_model_nameupdate_otherCorp(self):
+        """case05:编辑模型名称[其他组织RCM]--更新受限"""
+
+        res = run_method.post(self.api, self.data, headers=other_corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test06_building_model_nameupdate_success(self):
+        """case06:编辑模型名称[RCM]--更新成功"""
+
+        self.data.update(model_name="test06模型名称")
+        res = run_method.post(self.api, self.data, headers=corp_header)
+        model_res = pub_param.get_building_model(self.building_id, corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(model_res["data_list"][0]["model_name"],
+                         self.data["model_name"], run_method.assertInfo(model_res))

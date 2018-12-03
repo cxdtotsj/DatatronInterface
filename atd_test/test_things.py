@@ -44,7 +44,8 @@ class TestThingsAdd(unittest.TestCase):
     def setUp(self):
         self.api = '/things/add'
         self.data = {
-            "device_id": Things.device_id()
+            "device_id": Things.device_id(),
+            "device_type":"TYPE_DEVICE"
         }
 
     def test01_things_add_noName(self):
@@ -92,7 +93,7 @@ class TestThingsAdd(unittest.TestCase):
                     where id = "{}";'''.format(res.json()["id"])
         device_type = opera_db.get_fetchone(sql)
         self.assertEqual(device_type["device_type"],
-                         0, "数据库结果:{}".format(device_type))    # 0 为 TYPE_DEVICE
+                         1, "数据库结果:{}".format(device_type))    # 1 为 TYPE_DEVICE-单体设备
 
     def test07_things_add_design_deviceType(self):
         """case07:设备添加[RCM]--指定的设备类型"""
@@ -104,7 +105,7 @@ class TestThingsAdd(unittest.TestCase):
                     where id = "{}";'''.format(res.json()["id"])
         device_type = opera_db.get_fetchone(sql)
         self.assertEqual(device_type["device_type"],
-                         1, "数据库结果:{}".format(device_type))    # 1 为 TYPE_GATEWAY
+                         2, "数据库结果:{}".format(device_type))    # 2 为 TYPE_GATEWAY-网关
 
     def test08_things_add_design_success(self):
         """case08:设备添加[RCM]--全字段"""
@@ -199,7 +200,8 @@ class TestThingsList(unittest.TestCase):
         self.api = '/things/list'
         self.data = {
             "page":1,
-            "limit":100
+            "limit":100,
+            "type_filter": "ALL"
         }
 
     def test01_things_list_rsm(self):
@@ -244,6 +246,7 @@ class TestThingsList(unittest.TestCase):
     def test06_things_list_PId(self):
         """case06:设备列表[RCM]--有parent_id(父节点下所有设备)"""
         
+        self.data.pop("type_filter")
         parent_id = pub_param.create_parent_device(corp_header,3)   # 3表示新增的网关下设备
         self.data.update(parent_id=parent_id)
         res = run_method.post(self.api,self.data,headers=corp_header)
@@ -610,8 +613,8 @@ class TestThingsAttrs(unittest.TestCase):
 
         self.data.update(id="abc123")
         res = run_method.post(self.api,self.data,headers=corp_header)
-        self.assertEqual(res.status_code,200,run_method.errInfo(res))
-        self.assertEqual(res.json()["attrs"],[],run_method.errInfo(res))
+        self.assertEqual(res.status_code,400,run_method.errInfo(res))
+        self.assertEqual(res.json()["code"],1404,run_method.errInfo(res))
 
     def test03_things_attrs_rsm(self):
         """case03:获取设备属性[RCM]--rsm受限"""

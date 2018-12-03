@@ -2,6 +2,7 @@ from base.get_url import GetUrl
 from base.grpc_base_run import GrpcBaseRun
 import json
 import requests
+from copy import deepcopy
 
 
 class BaseMethod:
@@ -54,13 +55,28 @@ class BaseMethod:
         request_id: response对象中的request_id
         """
         if isinstance(res,object):
-            return {"err":res.text,"request_id":res.headers["X-Request-Id"]}
+            return "\033[31m {} \033[0m".format({"err":res.text,"request_id":res.headers["X-Request-Id"]})
+    
+    def assertInfo(self,message):
+        """assert错误信息输出"""
+        return "\033[31m {} \033[0m".format(message)
+    
+    def dict_in_list(self,k,iter):
+        """
+        在list中增加字典,
+        k为字典的key
+        iter为可迭代对象,每个迭代元素为value值
+        """
+        data_list = []
+        d = {}
+        for i in range(len(iter)):
+            d[k] = iter[i]
+            data_list.append(d)
+            d = deepcopy(d)
+        return data_list
 
 if __name__ == "__main__":
     api = "/user/create"
     base = BaseMethod()
-    data = {'name': "auto_test03",
-            "password": "123456"}
-    header = {"Authorization": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJTUEVDSUFMLUFETUlOLUlEIiwicm9sIjoxMDczNzQxODI0LCJpYXQiOjE1MzgwMjc4NDAsInNlcyI6ImFiY2QxMjM0In0.F_PxEwGsEITEAkLVInqPMI7kI348LSUx-4n7tqkpg9cRjqroZbe6_Y94euTXT8FnyaSSHDfDFTvzmMmVZje_T4SnVrbQsqHLONrc39kH7iq2Ci9Z7m6Itr5W4qifKFo6RZPh1MMn-Yz2bhc5Dn9fg0ENEA2uQPRgm95eiO0MDUE"}
-    res = base.post(api, data, headers=header)
-    print(res.text)
+    a = base.dict_in_list("id",[1,2,3])
+    print(a)

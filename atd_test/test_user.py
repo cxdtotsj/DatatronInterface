@@ -17,6 +17,7 @@ from base.base_method import BaseMethod
 from data.public_param import PublicParam
 from util.operation_json import OperetionJson
 import unittest
+import time
 
 
 run_method = BaseMethod()
@@ -439,6 +440,7 @@ class TestUserPwdReset(unittest.TestCase):
         res = run_method.post(api, data, headers=corp_header)
         self.assertEqual(res.status_code, 400, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1401, run_method.errInfo(res))
+        time.sleep(2)
 
 
 if __name__ == '__main__':
