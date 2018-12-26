@@ -532,108 +532,108 @@ class TestZoneDel(unittest.TestCase):
         self.assertNotEqual(zone_detail["status"], 3, "园区被普通用户删除")
 
 
-class ZoneBuildmodlist(unittest.TestCase):
+# class ZoneBuildmodlist(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.zone_rcm = pub_param.common_user(role=1<<19) # 创建账号
-        cls.zone_id = pub_param.create_zone(cls.zone_rcm)   
-        cls.buildings = []
-        cls.models = []
-        for _ in range(2):
-            building_id = pub_param.create_building(cls.zone_id, cls.zone_rcm)
-            files = ["TPY-ZL-A-7F.objr", "TPY-ZL-A-8F.objr"]
-            cls.buildings.append(building_id)
-            for name in files:
-                res, __ = pub_param.building_model_upload(
-                    building_id, cls.zone_rcm, filename=name)
-                model_id = res["model_id"]
-                cls.models.append(model_id)
+#     @classmethod
+#     def setUpClass(cls):
+#         cls.zone_rcm = pub_param.common_user(role=1<<19) # 创建账号
+#         cls.zone_id = pub_param.create_zone(cls.zone_rcm)   
+#         cls.buildings = []
+#         cls.models = []
+#         for _ in range(2):
+#             building_id = pub_param.create_building(cls.zone_id, cls.zone_rcm)
+#             files = ["TPY-ZL-A-7F.objr", "TPY-ZL-A-8F.objr"]
+#             cls.buildings.append(building_id)
+#             for name in files:
+#                 res, __ = pub_param.building_model_upload(
+#                     building_id, cls.zone_rcm, filename=name)
+#                 model_id = res["model_id"]
+#                 cls.models.append(model_id)
 
-    def setUp(self):
-        self.api = '/zone/buildmodlist'
-        self.data = {
-            "page": 1,
-            "limit": 10,
-            "zone_id": self.zone_id
-        }
+#     def setUp(self):
+#         self.api = '/zone/buildmodlist'
+#         self.data = {
+#             "page": 1,
+#             "limit": 10,
+#             "zone_id": self.zone_id
+#         }
 
 
-    def test01_zone_buildmodlist_errZoneId(self):
-        """case01:指定园区建筑模型列表[RCM]--错误的园区ID"""
+#     def test01_zone_buildmodlist_errZoneId(self):
+#         """case01:指定园区建筑模型列表[RCM]--错误的园区ID"""
 
-        self.data.update(zone_id="abc123")
-        res = run_method.post(self.api, self.data, headers=self.zone_rcm)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(res.json()["total"], '0', run_method.errInfo(res))
+#         self.data.update(zone_id="abc123")
+#         res = run_method.post(self.api, self.data, headers=self.zone_rcm)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         self.assertEqual(res.json()["total"], '0', run_method.errInfo(res))
 
-    def test02_zone_buildmodlist_noRole(self):
-        """case02:指定园区建筑模型列表[普通用户]--查询受限"""
+#     def test02_zone_buildmodlist_noRole(self):
+#         """case02:指定园区建筑模型列表[普通用户]--查询受限"""
 
-        res = run_method.post(self.api, self.data, headers=common_user_header)
-        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
-        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+#         res = run_method.post(self.api, self.data, headers=common_user_header)
+#         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+#         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
 
-    def test03_zone_buildmodlist_buildings(self):
-        """case03:指定园区建筑模型列表[RCM]--返回building_id一致"""
+#     def test03_zone_buildmodlist_buildings(self):
+#         """case03:指定园区建筑模型列表[RCM]--返回building_id一致"""
 
-        res = run_method.post(self.api, self.data, headers=self.zone_rcm)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        res_builds = [data["building_id"] for data in res.json()["data_list"]]
-        self.assertEqual(res_builds, self.buildings, run_method.errInfo(res))
+#         res = run_method.post(self.api, self.data, headers=self.zone_rcm)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         res_builds = [data["building_id"] for data in res.json()["data_list"]]
+#         self.assertEqual(res_builds, self.buildings, run_method.errInfo(res))
 
-    def test04_zone_buildmodlist_models(self):
-        """case04:指定园区建筑模型列表[RCM]--返回model_id一致"""
+#     def test04_zone_buildmodlist_models(self):
+#         """case04:指定园区建筑模型列表[RCM]--返回model_id一致"""
 
-        res = run_method.post(self.api, self.data, headers=self.zone_rcm)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        data_list = res.json()["data_list"]
-        res_models = []
-        for building in data_list:
-            for model in building["model_list"]:
-                res_models.append(model["id"])
-        opera_assert.is_list_eq(self.models, res_models,run_method.errInfo(res))
+#         res = run_method.post(self.api, self.data, headers=self.zone_rcm)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         data_list = res.json()["data_list"]
+#         res_models = []
+#         for building in data_list:
+#             for model in building["model_list"]:
+#                 res_models.append(model["id"])
+#         opera_assert.is_list_eq(self.models, res_models,run_method.errInfo(res))
 
-    def test05_zone_buildmodlist_rsm(self):
-        """case05:指定园区建筑模型列表[RSM]--RSM查询成功"""
+#     def test05_zone_buildmodlist_rsm(self):
+#         """case05:指定园区建筑模型列表[RSM]--RSM查询成功"""
 
-        res = run_method.post(self.api, self.data, headers=super_header)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        data_list = res.json()["data_list"]
-        res_models = []
-        for building in data_list:
-            for model in building["model_list"]:
-                res_models.append(model["id"])
-        opera_assert.is_list_eq(self.models, res_models,run_method.errInfo(res))
+#         res = run_method.post(self.api, self.data, headers=super_header)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         data_list = res.json()["data_list"]
+#         res_models = []
+#         for building in data_list:
+#             for model in building["model_list"]:
+#                 res_models.append(model["id"])
+#         opera_assert.is_list_eq(self.models, res_models,run_method.errInfo(res))
 
-    def test06_zone_buildmodlist_noZoneId(self):
-        """case06:指定园区建筑模型列表[RCM]--不传Zone_Id,取所有独栋建筑"""
+#     def test06_zone_buildmodlist_noZoneId(self):
+#         """case06:指定园区建筑模型列表[RCM]--不传Zone_Id,取所有独栋建筑"""
         
-        buildinges = []
-        for _ in range(2):
-            building_id = pub_param.create_sign_building(header=self.zone_rcm)
-            buildinges.append(building_id)
-        self.data.update(zone_id=None)
-        res = run_method.post(self.api,self.data,headers=self.zone_rcm)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        opera_assert.is_list_equal(buildinges,res.json()["data_list"],"building_id",run_method.errInfo(res))
+#         buildinges = []
+#         for _ in range(2):
+#             building_id = pub_param.create_sign_building(header=self.zone_rcm)
+#             buildinges.append(building_id)
+#         self.data.update(zone_id=None)
+#         res = run_method.post(self.api,self.data,headers=self.zone_rcm)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         opera_assert.is_list_equal(buildinges,res.json()["data_list"],"building_id",run_method.errInfo(res))
 
-    def test07_zone_buildmodlist_buildDisable(self):
-        """case07:指定园区建筑模型列表[RSM]--有zone_id，存在停用建筑"""
+#     def test07_zone_buildmodlist_buildDisable(self):
+#         """case07:指定园区建筑模型列表[RSM]--有zone_id，存在停用建筑"""
         
-        building_id = pub_param.create_building(self.zone_id,self.zone_rcm)
-        sql = '''update building set status = 2 where id = '{}';'''.format(building_id)
-        opera_db.update_data(sql)
-        res = run_method.post(self.api,self.data,headers=self.zone_rcm)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(res.json()["total"],'2',run_method.errInfo(res))   #2 为有效的有zone_id 的建筑数量
+#         building_id = pub_param.create_building(self.zone_id,self.zone_rcm)
+#         sql = '''update building set status = 2 where id = '{}';'''.format(building_id)
+#         opera_db.update_data(sql)
+#         res = run_method.post(self.api,self.data,headers=self.zone_rcm)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         self.assertEqual(res.json()["total"],'2',run_method.errInfo(res))   #2 为有效的有zone_id 的建筑数量
 
-    def test08_zone_buildmodlist_buildDisable(self):
-        """case08:指定园区建筑模型列表[RSM]--无zone_id，存在停用建筑"""
+#     def test08_zone_buildmodlist_buildDisable(self):
+#         """case08:指定园区建筑模型列表[RSM]--无zone_id，存在停用建筑"""
 
-        building_id = pub_param.create_sign_building(header=self.zone_rcm)
-        sql = '''update building set status = 2 where id = '{}';'''.format(building_id)
-        opera_db.update_data(sql)
-        res = run_method.post(self.api,self.data,headers=self.zone_rcm)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(res.json()["total"],'2',run_method.errInfo(res))   #2 为有效的无zone_id 的建筑数量
+#         building_id = pub_param.create_sign_building(header=self.zone_rcm)
+#         sql = '''update building set status = 2 where id = '{}';'''.format(building_id)
+#         opera_db.update_data(sql)
+#         res = run_method.post(self.api,self.data,headers=self.zone_rcm)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         self.assertEqual(res.json()["total"],'2',run_method.errInfo(res))   #2 为有效的无zone_id 的建筑数量

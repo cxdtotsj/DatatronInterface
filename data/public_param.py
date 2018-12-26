@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from datetime import datetime
 from base.base_method import BaseMethod
 from util.operation_db import OperationDB
 import random
@@ -34,7 +35,7 @@ class PublicParam:
 
     # 超级管理员 (1 << 30) header
     def get_super_header(self):
-        return {"Authorization": self.super_token}
+        return {"Authorization": self.super_token,"id-prefix":"ci"}
 
     # 公司管理员 token
     def get_corp_token(self, email=None, password=None):
@@ -70,7 +71,7 @@ class PublicParam:
             res = self.run_method.post(api, data)
             res.raise_for_status()
             token = res.json()["token"]
-            return {"Authorization":token}
+            return {"Authorization":token,"id-prefix":"ci"}
         except:
             print(self.run_method.errInfo(res))
 
@@ -79,7 +80,7 @@ class PublicParam:
     def get_corp_user(self):
         '''同时返回 header 、corp_id'''
         corp_token, corp_id = self.get_corp_token()
-        return {"Authorization": corp_token}, corp_id
+        return {"Authorization": corp_token,"id-prefix":"ci"}, corp_id
 
     # 获取错误码
     def get_code(self, res):
@@ -123,8 +124,9 @@ class PublicParam:
         return corp_name,random_email,random_mobile
 
     def random_name(self,name,num=None):
-        """num=None,return random_name;
-           num=int,return []
+        """
+        num=None,return random_name;
+        num=int,return []
         """
 
         time.sleep(1)
@@ -231,7 +233,7 @@ class PublicParam:
             res = self.run_method.post(
                 api, data, headers=self.get_super_header())
             res.raise_for_status()
-            return {"Authorization": res.json()["token"]}
+            return {"Authorization": res.json()["token"],"id-prefix":"ci"}
         except:
             print("用户登录失败")
             print(self.run_method.errInfo(res))
@@ -332,6 +334,8 @@ class PublicParam:
 
     # 园区 id
     def create_zone(self, header=None,data=None):
+        """return zone_id"""
+
         api = '/zone/create'
         if data is not None:
             data = data
@@ -469,32 +473,62 @@ class PublicParam:
             print("获取建筑详细信息失败")
             print(self.run_method.errInfo(res))
     
+    # 新建楼层
+    def create_building_layer(self,building_id,header):
+        """return layer_id"""
+
+        api = '/layer/create'
+        data = {
+            "building_id": building_id,
+            "name": "auto_楼层"
+        }
+        try:
+            res = self.run_method.post(api,json=data,headers=header)
+            res.raise_for_status()
+            return res.json()["id"]
+        except:
+            print("创建建筑楼层失败")
+            print(self.run_method.errInfo(res))
+
+    # 获取楼层列表
+    def get_building_layerList(self,building_id,header):
+        """return json()[data_list]"""
+
+        api = '/layer/list'
+        data = {
+            "building_id":building_id,
+            "page":1,
+            "limit":10
+        }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()["data_list"]
+        except:
+            print("获取建筑楼层信息失败")
+            print(self.run_method.errInfo(res))
+
     # 创建building，并上传模型
-    def building_model_upload(self,building_id=None,header=None,model_type=None,filename=None,model_name=None):
+    def building_model_upload(self,building_id=None,header=None,model_type=None,filename=None,model_name=None,layer_id=None):
         "return r.json(),building_id"
 
-        if building_id is not None:
-            building_id = building_id
-        else:
+        if building_id is None:
             building_id = self.create_building(header=header)
-        if model_type is not None:
-            model_type=model_type
-        else:
+        if model_type is None:
             model_type = "T"
-        if filename is not None:
-            filename=filename
-        else:
+        if filename is None:
             filename = 'Office.objr'
-        if model_name is not None:
-            model_name = model_name
-        else:
+        if model_name is None:
             model_name = "其他模型"
-        api = "/building/model/upload"
+        if layer_id is None:
+            layer_id = self.create_building_layer(building_id=building_id,header=header)
+        api = "/model/upload"
         path_file = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig',filename)
         data = {
-                "building_id" :building_id,
-                "model_type":model_type,
-                "model_name":model_name
+            "building_id" :building_id,
+            "layer_id":layer_id,
+            "model_type":model_type,
+            "model_name":model_name
             }
         try:
             with open(path_file,'rb') as fileop:
@@ -509,6 +543,45 @@ class PublicParam:
             print("创建building并上传模型失败")
             print(self.run_method.errInfo(r))
 
+    # 创建building，并上传模型至S3服务器
+    def building_model_uploadv2(self,building_id=None,header=None,model_type=None,filename=None,model_name=None,layer_id=None):
+        "return r.json(),building_id"
+
+        if building_id is None:
+            building_id = self.create_building(header=header)
+        if model_type is None:
+            model_type = "T"
+        if filename is None:
+            filename = 'Office.objr'
+        if model_name is None:
+            model_name = "其他模型"
+        if layer_id is None:
+            layer_id = self.create_building_layer(building_id=building_id,header=header)            
+        api = "/model/upload"
+        path_file = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig',filename)
+        layer_id = self.create_building_layer(building_id=building_id,header=header)
+        data = {
+            "building_id" :building_id,
+            "layer_id":layer_id,
+            "model_type":model_type,
+            "model_name":model_name
+            }
+        try:
+            res = self.run_method.post(api,data=data,headers=header)
+            res.raise_for_status()
+            s3_url = res.json()["URL"]  # 上传文件的签名URL
+        except:
+            print("创建S3路径失败")
+            print(self.run_method.errInfo(res))
+        try:
+            with open(path_file,'rb') as fileop:
+                files = {"file":fileop}
+                r = self.run_method.put(s3_url,data=files)
+                r.raise_for_status()
+        except:
+            print("创建building并上传模型失败")
+            print(self.run_method.errInfo(r))
+        return res.json(),building_id
 
     # 获取meta_url页面构件的GUID
     def get_guid(self,meta_url):
@@ -530,7 +603,7 @@ class PublicParam:
     def get_entities(self, meta_url):
         """输入 meta_url,返回 entities"""
         for _ in range(6):
-            r = requests.get(meta_url)
+            r = requests.get(meta_url,headers={"Connection":"close"}) # 每次连接，关闭TCP
             if r.status_code == 200:
                 break
             else:
@@ -572,7 +645,7 @@ class PublicParam:
     # 获取构件信息
     def get_entity(self,model_id,guid):
         """return entity.json()"""
-        api = '/building/model/entityget'
+        api = '/model/entityget'
         data = {
             "model_id":model_id,
             "guid":guid
@@ -589,7 +662,7 @@ class PublicParam:
     def get_building_model(self,building_id,header):
         """return res.json()"""
 
-        api = '/building/model/list'
+        api = '/model/list'
         data = {
             "building_id":building_id
         }
@@ -601,6 +674,25 @@ class PublicParam:
             print("获取建筑模型信息失败")
             print(self.run_method.errInfo(res))
 
+    # 获取建筑模型信息（后续用这个）
+    def get_model_listv2(self,header,zone_id=None,building_id=None,layer_id=None):
+        """return res.json()"""
+
+        api = '/model/listv2'
+        data = {
+            "zone_id": zone_id,
+            "building_id":building_id,
+            "layer_id": layer_id,
+            "page":1,
+            "limit":1000
+        }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()
+        except:
+            print("获取建筑模型信息失败")
+            print(self.run_method.errInfo(res))
 
     # 创建设备
     def create_device(self,data=None,header=None,device_type=None):
@@ -781,12 +873,183 @@ class PublicParam:
             print("获取场景失败")
             print(self.run_method.errInfo(res))
 
+    # 获取hour之前的UTC时间  hours, date_format='%Y-%m-%d %H:%M:%S'
+    def beforeUTC(self,hours):
+        """return：本地时间多少小时之前的UTC时间"""
+        hours = int(hours)
+        t = int(time.time()) - hours*60*60-8*60*60
+        ut = time.strftime('%Y-%m-%dT%H:%M:%SZ',time.localtime(t))
+        return ut
 
+    # Layer
+
+    # 创建数据模式
+    def create_layer_class(self,name=None,header=None):
+        """创建数据模型，返回ID"""
+
+        api = '/layer/class/create'
+        if name is None:
+            name = self.random_name("随机数据模式名称")
+        if header is None:
+            header = self.common_user(role=524288)
+        data = {
+                "name":name
+            }
+        try:
+            res = self.run_method.post(api, data, headers=header)
+            res.raise_for_status()
+            return res.json()["id"]
+        except:
+            print("新增数据模式失败")
+            print(self.run_method.errInfo(res))
+
+    # 获取数据模式列表
+    def get_layer_classList(self,header):
+        """return json()[data_list]"""
+
+        api = '/layer/class/list'
+        data = {
+            "page":1,
+            "limit":50
+        }
+        try:
+            res = self.run_method.post(api,data,headers=header)
+            res.raise_for_status()
+            return res.json()["data_list"]
+        except:
+            print("获取建筑楼层信息失败")
+            print(self.run_method.errInfo(res))
+
+    # 创建zone、building、layer关系
+    def front_zbl(self,header):
+        """返回一个 tuple"""
+
+        # 新增园区
+        zone_id = self.create_zone(header=header)
+        # 新增园区所属建筑
+        building_one = self.create_building(zone_id=zone_id,header=header)
+        building_two = self.create_building(zone_id=zone_id,header=header)
+        # building_one 楼层
+        layer_oo = self.create_building_layer(building_one,header) # building_one 第一层
+        layer_ot = self.create_building_layer(building_one,header) # building_two 第二层
+        # building_two 楼层
+        layer_to = self.create_building_layer(building_two,header) # building_two 第一层
+        return (zone_id,building_one,building_two,layer_oo,layer_ot,layer_to)
+
+    def create_deviceAdd(self,level,class_id,layer_id,header):
+        
+        api = '/layer/device/add'
+        device_id = self.create_device(header=header)
+        data = {
+            "level": level,
+            "class_id": class_id,
+            "layer_id": layer_id,
+            "things_id": device_id,
+            "type": "extra",
+            "url": "https://www.baidu.com",
+            "coord": {
+                "altitude": 122,
+                "latitude": 32,
+                "longitude": 0,
+                "angle": 0
+            }
+        }
+        try:
+            res = self.run_method.post(api, json=data, headers=header)
+            res.raise_for_status()
+        except:
+            print("绑定设备失败")
+            print(self.run_method.errInfo(res))
+    
+    def front_deviceList(self,header):
+        """
+        device_info:(zone_id,building_one,building_two,layer_oo,layer_ot,layer_to)
+        return device_info,cid_one,cid_two
+        """
+        
+        device_info = self.front_zbl(header)
+        # 构造 2个 数据模式 
+        cid_one = self.create_layer_class(header=header) # 数据模式 class_one
+        cid_two = self.create_layer_class(header=header) # 数据模式 class_two
+
+        # 构造 level1 ，class_one 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        for _ in range(2):
+            self.create_deviceAdd(1,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(1,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(1,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
+        
+        # 构造 level1 ，class_two 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        for _ in range(2):
+            self.create_deviceAdd(1,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(1,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(1,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # 构造 level2 ，class_one 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        for _ in range(2):
+            self.create_deviceAdd(2,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(2,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(2,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # 构造 level2 ，class_two 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        for _ in range(2):
+            self.create_deviceAdd(2,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(2,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(2,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # 构造 level4 ，class_one 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        for _ in range(2):
+            self.create_deviceAdd(4,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(4,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(4,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # 构造 level4 ，class_two 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        for _ in range(2):
+            self.create_deviceAdd(4,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(4,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(4,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # 增加 level 7，class_one 的数据、分 building_one、building_two
+        layer_oo = device_info[3] # 建筑1，楼层 1
+        self.create_deviceAdd(7,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
+        layer_ot = device_info[4] # 建筑1，楼层 2
+        self.create_deviceAdd(7,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
+        layer_to = device_info[5] # 建筑2，楼层 1
+        self.create_deviceAdd(7,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # # 增加 level 7，class_two 的数据、分 building_one、building_two
+        # layer_oo = device_info[3] # 建筑1，楼层 1
+        # self.create_deviceAdd(7,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
+        # layer_ot = device_info[4] # 建筑1，楼层 2
+        # self.create_deviceAdd(7,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
+        # layer_to = device_info[5] # 建筑2，楼层 1
+        # self.create_deviceAdd(7,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
+
+        return device_info,cid_one,cid_two
 
 if __name__ == "__main__":
     import time
     bd = PublicParam()
-    cid = bd.create_corp()
-    print(cid)
+    header = bd.get_corp_user()[0]
+    a = bd.front_deviceList(header)
+    print(a)
+
 
 

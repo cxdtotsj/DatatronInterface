@@ -156,7 +156,27 @@ import os
 #     ar = testAr()
 #     ar.testar()
 
-import uuid
+# import uuid
 
-a = uuid.uuid4
-print(a)
+# a = uuid.uuid4
+# print(a)
+
+import requests
+
+
+# url = 'https://s3.arctron.cn/test/test?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9EZ4QY1DB3QQ1W75AAR1%2F20181218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20181218T045351Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=f4e2482883b7f2b506565de00a517482237be7e484ba44a5b574d63a0c493c40'
+url = 'https://s3.arctron.cn/test/abc.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9EZ4QY1DB3QQ1W75AAR1%2F20181218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20181218T054143Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=9c05e816acd59962fbb3fca65abd9b29a6c4fe4c57c9c8216fee3fc09629a9f0'
+file_Office = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','abc.jpg')
+with open(file_Office, 'rb') as fileop:
+    res = requests.put(url,data=fileop)
+    print(res.status_code)
+    print(res.text)
+
+
+
+
+
+# url = 'https://s303.arctron.cn/test/test?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9EZ4QY1DB3QQ1W75AAR1%2F20181218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20181218T045653Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=eaa98047b9b2b4980341bc9590eae8a89dc6b414de007a693bdba732a096f2b1'
+# res = requests.get(url)
+# print(res.status_code)
+# print(res.text)

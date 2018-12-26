@@ -49,6 +49,13 @@ class BaseMethod:
         url = self.get_url.http_api_url(api)
         return requests.get(url=url,params=data,json=json,headers=headers,cookies=cookies,timeout=30)
 
+    def put(self,api,data=None):
+        """
+        api: URL
+        data: 文件流
+        """
+        return requests.put(url=api,data=data,timeout=60)
+
     def errInfo(self,res):
         """
         res: http的response对象
@@ -76,7 +83,12 @@ class BaseMethod:
         return data_list
 
 if __name__ == "__main__":
+    import os
     api = "/user/create"
     base = BaseMethod()
-    a = base.dict_in_list("id",[1,2,3])
-    print(a)
+    url = 'https://s3.arctron.cn/test/citest?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9EZ4QY1DB3QQ1W75AAR1%2F20181218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20181218T051908Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=c330cbb3269f03fb6cf8626b0a4b6501a2cb74eceaa9e0a0774166063f9cbb6d'
+    file_Office = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','Office.objr')
+    with open(file_Office, 'rb') as fileop:
+        res = base.put(url,data=fileop)
+        print(res.status_code)
+        print(res.text)

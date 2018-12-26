@@ -1,3 +1,13 @@
+'''
+Stats:
+
+/statistic/getdatalatestinf
+/statistic/querybatchinf
+/stats/statsinfo
+
+'''
+
+
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -70,41 +80,279 @@ class StatisticGetdatalatest(unittest.TestCase):
         self.assertEqual(res.status_code,200,run_method.errInfo(res))
         self.assertNotEqual(len(res.json()["data_list"]),0,run_method.errInfo(res))
 
-@unittest.skip("开发中")
-class StatisticQueryinf(unittest.TestCase):
 
-    def test01_statistic_quertinf_noMeasurements(self):
-        """case01:查询设备数据[RCM]--无设备ID"""
-        pass
+class StatisticQuerybatchinf(unittest.TestCase):
 
-    def test02_statistic_quertinf_oneMeasurements(self):
-        """case02:查询设备数据[RCM]--一个设备ID"""
-        pass
+    @classmethod
+    def setUpClass(cls):
+        """使用 demo 账号"""
+        cls.demo_heaher = pub_param.user_login("123456","demo")
+        cls.ut24 = pub_param.beforeUTC(24)
+        cls.api = '/statistic/querybatchinf'
 
-    def test03_statistic_quertinf_noFields(self):
-        """case03:查询设备数据[RCM]--无设备属性"""
-        pass
+    def test01_statistic_quertinf_oneMeasurements(self):
+        """case01:查询设备数据[RCM]--一个设备ID"""
 
-    def test04_statistic_quertinf_oneFields(self):
-        """case04:查询设备数据[RCM]--一个设备属性"""
-        pass
+        data = {
+            "query_list":[
+                {
+                    "measurement": "117461383276147759",
+                    "fields":[
+                        "CO2_1"
+                    ],
+                    "from":self.ut24
+                }
+            ]
+        }
+        res = run_method.post(self.api,json=data,headers=self.demo_heaher)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["data_list"][0]["values"],run_method.errInfo(res))
 
-    def test05_statistic_quertinf_multFields(self):
-        """case05:查询设备数据[RCM]--多个设备属性"""
-        pass
+    def test02_statistic_quertinf_fieldFuncs_sum(self):
+        """case02:查询设备数据[RCM]--对属性值求和"""
 
-    def test06_statistic_quertinf_fieldFuncs_mean(self):
-        """case06:查询设备数据[RCM]--对属性值求平均值"""
-        pass
+        data = {
+            "query_list":[
+                {
+                    "measurement": "117461383276147759",
+                    "fields":[
+                        "CO2_1"
+                    ],
+                    "field_funcs":{"CO2_1":"SUM"},
+                    "from":self.ut24
+                }
+            ]
+        }
+        res = run_method.post(self.api,json=data,headers=self.demo_heaher)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["data_list"][0]["values"],run_method.errInfo(res))
 
-    def test07_statistic_quertinf_fieldFuncs_sum(self):
-        """case07:查询设备数据[RCM]--对属性值求和"""
-        pass
+    def test03_statistic_quertinf_groupBy(self):
+        """case03:查询设备数据[RCM]--聚合1小时(含时间段)"""
 
-    def test08_statistic_quertinf_formTo(self):
-        """case08:查询设备数据[RCM]--查找的时间范围(默认:time>now()-8h)"""
-        pass
+        data = {
+            "query_list":[
+                {
+                    "measurement": "117461383276147759",
+                    "fields":[
+                        "CO2_1"
+                    ],
+                    "field_funcs":{"CO2_1":"SUM"},
+                    "aggregation_raw":"time(1h)",
+                    "from":self.ut24
+                }
+            ]
+        }
+        res = run_method.post(self.api,json=data,headers=self.demo_heaher)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertTrue(len(res.json()["data_list"][0]["values"])>=24,run_method.errInfo(res))
 
-    def test09_statistic_quertinf_groupBy(self):
-        """case09:查询设备数据[RCM]--聚合十分钟(含时间段)"""
-        pass
+    def test04_statistic_quertinf_multFields(self):
+        """case04:查询设备数据[RCM]--多个设备属性"""
+
+        data = {
+            "query_list":[
+                {
+                    "measurement": "117461404985865263",
+                    "fields":[
+                        "EP",
+                        "EQ"
+                    ],
+                    "from":self.ut24
+                }
+            ]
+        }
+        res = run_method.post(self.api,json=data,headers=self.demo_heaher)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+
+    def test05_statistic_quertinf_multMeasurements(self):
+        """case05:查询设备数据[RCM]--多个设备ID"""
+
+        data = {
+            "query_list":[
+                {
+                    "measurement": "117461383276147759",
+                    "fields":[
+                        "CO2_1"
+                    ],
+                    "aggregation_raw":"time(6h)",
+                    "from":self.ut24
+                },
+                {
+                    "measurement": "117461379601937455",
+                    "fields":[
+                        "CO2_2"
+                    ],
+                    "aggregation_raw":"time(6h)",
+                    "from":self.ut24
+                }
+            ]
+        }
+        res = run_method.post(self.api,json=data,headers=self.demo_heaher)
+        self.assertEqual(res.status_code,200,run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["data_list"][0]["values"],run_method.errInfo(res))
+        self.assertIsNotNone(res.json()["data_list"][1]["values"],run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]),2,run_method.errInfo(res))
+    
+class TestStatsinfo(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.opera_db = OperationDB()
+        cls.super_header = pub_param.get_super_header()
+        cls.corp_header, cls.corp_id = pub_param.get_corp_user()
+        # 普通用户
+        cls.common_user_header = pub_param.common_user(cls.corp_id)
+
+    def setUp(self):
+        self.api = '/stats/statsinfo'
+
+    def test01_statsinfo_zone_area_rcm(self):
+        """case01:获得园区总面积[RCM]--获取组织内所有园区面积"""
+
+        sql = '''select sum(area) area from zone where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        area = self.opera_db.get_fetchone(sql)["area"]
+        res = run_method.post(self.api,headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["zone_area"],area,run_method.errInfo(res))
+
+    def test02_statsinfo_zone_area_rsm(self):
+        """case02:获得园区总面积[RSM]--获取所有园区面积"""
+
+        sql = '''select sum(area) area from zone where status in (1,2);'''
+        area = self.opera_db.get_fetchone(sql)["area"]
+        res = run_method.post(self.api,headers=self.super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["zone_area"],area,run_method.errInfo(res))
+
+    def test03_statsinfo_zone_area_noRole(self):
+        """case03:获得园区总面积[普通用户]--获取组织内所有园区面积"""
+
+        sql = '''select sum(area) area from zone where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        area = self.opera_db.get_fetchone(sql)["area"]
+        res = run_method.post(self.api,headers=self.common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["zone_area"],area,run_method.errInfo(res))
+
+    def test04_statsinfo_zone_num_rcm(self):
+        """case04:获得园区数量[RCM]--获取组织内园区数量"""
+
+        sql = '''select id from zone where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        total = self.opera_db.get_effect_row(sql)
+        res = run_method.post(self.api,headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["zone_num"],str(total),run_method.errInfo(res))
+
+    def test05_statsinfo_zone_num_rsm(self):
+        """case05:获得园区数量[RSM]--获取所有园区数量"""
+
+        sql = '''select id from zone where status in (1,2);'''
+        total = self.opera_db.get_effect_row(sql)
+        res = run_method.post(self.api,headers=self.super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["zone_num"],str(total),run_method.errInfo(res))
+
+    def test06_statsinfo_zone_num_noRole(self):
+        """case06:获得园区数量[普通用户]--获取组织内园区数量"""
+
+        sql = '''select id from zone where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        total = self.opera_db.get_effect_row(sql)
+        res = run_method.post(self.api,headers=self.common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["zone_num"],str(total),run_method.errInfo(res))
+
+    def test07_statsinfo_building_area_rcm(self):
+        """case07:获得建筑总面积[RCM]--获取组织内所有建筑面积"""
+
+        sql = '''select sum(area) area from building where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        area = self.opera_db.get_fetchone(sql)["area"]
+        res = run_method.post(self.api,headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["building_area"],float(area),run_method.errInfo(res))
+
+    def test08_statsinfo_zone_area_rsm(self):
+        """case08:获得建筑总面积[RSM]--获取所有建筑面积"""
+
+        sql = '''select sum(area) area from building where status in (1,2);'''
+        area = self.opera_db.get_fetchone(sql)["area"]
+        res = run_method.post(self.api,headers=self.super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["building_area"],float(area),run_method.errInfo(res))
+
+    def test09_statsinfo_zone_area_noRole(self):
+        """case09:获得建筑总面积[普通用户]--获取组织内所有建筑面积"""
+
+        sql = '''select sum(area) area from building where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        area = self.opera_db.get_fetchone(sql)["area"]
+        res = run_method.post(self.api,headers=self.common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["building_area"],float(area),run_method.errInfo(res))
+
+    def test10_statsinfo_zone_num_rcm(self):
+        """case10:获得建筑数量[RCM]--获取组织内建筑数量"""
+
+        sql = '''select id from building where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        total = self.opera_db.get_effect_row(sql)
+        res = run_method.post(self.api,headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["building_num"],str(total),run_method.errInfo(res))
+
+    def test11_statsinfo_zone_num_rsm(self):
+        """case11:获得建筑数量[RSM]--获取所有建筑数量"""
+
+        sql = '''select id from building where status in (1,2);'''
+        total = self.opera_db.get_effect_row(sql)
+        res = run_method.post(self.api,headers=self.super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["building_num"],str(total),run_method.errInfo(res))
+
+    def test12_statsinfo_zone_num_noRole(self):
+        """case12:获得建筑数量[普通用户]--获取组织内建筑数量"""
+
+        sql = '''select id from building where status in (1,2) and corp_id = '{}';'''.format(self.corp_id)
+        total = self.opera_db.get_effect_row(sql)
+        res = run_method.post(self.api,headers=self.common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["building_num"],str(total),run_method.errInfo(res))
+    
+    def test13_statsinfo_prov_num_rsm(self):
+        """case13:获得省份数量[RSM]--获取所有项目省份数量"""
+
+        res = run_method.post(self.api,headers=self.super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["prov_num"],'0',run_method.errInfo(res))
+
+    def test14_statsinfo_prov_num_rcm(self):
+        """case14:获得省份数量[RCM]--获取组织内项目省份数量"""
+
+        res = run_method.post(self.api,headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["prov_num"],'0',run_method.errInfo(res))
+
+    def test15_statsinfo_prov_num_noRole(self):
+        """case15:获得省份数量[普通用户]--获取组织内项目省份数量"""
+
+        res = run_method.post(self.api,headers=self.common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["prov_num"],'0',run_method.errInfo(res))
+
+    def test16_statsinfo_city_num_rsm(self):
+        """case16:获得城市数量[RSM]--获取所有项目城市数量"""
+
+        res = run_method.post(self.api,headers=self.super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["city_num"],'0',run_method.errInfo(res))
+
+    def test17_statsinfo_city_num_rcm(self):
+        """case17:获得城市数量[RCM]--获取所有项目城市数量"""
+
+        res = run_method.post(self.api,headers=self.corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["city_num"],'0',run_method.errInfo(res))
+
+    def test18_statsinfo_city_num_noRole(self):
+        """case18:获得城市数量[普通用户]--获取所有项目城市数量"""
+
+        res = run_method.post(self.api,headers=self.common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertNotEqual(res.json()["city_num"],'0',run_method.errInfo(res))
