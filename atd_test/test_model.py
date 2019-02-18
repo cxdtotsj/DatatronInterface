@@ -7,6 +7,7 @@
 /model/list
 /model/listv2
 /model/entityget
+/model/buildingget
 
 '''
 
@@ -31,10 +32,8 @@ opera_assert = OperationAssert()
 opera_db = OperationDB()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
-# 普通用户
-common_user_header = pub_param.common_user(corp_id)
-# 其他组织RCM
-other_corp_header = pub_param.common_user(role=524288)
+common_user_header = pub_param.get_common_user()
+other_corp_header = pub_param.get_otherCorp_user()
 
 
 class TestModelUpload(unittest.TestCase):
@@ -83,7 +82,6 @@ class TestModelUpload(unittest.TestCase):
             files = {"file": fileop}
             res = run_method.post(
                 self.api, self.data, files=files, headers=corp_header)
-        print(res.json())
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertNotIn("err", res.json(), run_method.errInfo(res))
 
@@ -312,73 +310,7 @@ class TestModelUpdate(unittest.TestCase):
         else:
             print("模型未更新,新增模型文件,model_id : {}".format(self.model_id))
 
-
-# class TestBuildingModelList(unittest.TestCase):
-
-#     @classmethod
-#     def setUpClass(cls):
-#         cls.building_id = pub_param.create_building(header=corp_header)
-
-#     def test01_building_model_list_noBuildingId(self):
-#         """case01:特定建筑模型列表--无建筑ID"""
-
-#         api = '/building/model/list'
-#         data = {
-#             "building_id": None
-#         }
-#         res = run_method.post(api, data, headers=corp_header)
-#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-#         self.assertEqual(res.json()["total"], "0", run_method.errInfo(res))
-
-#     def test02_building_model_list_errBuildingId(self):
-#         """case02:特定建筑模型列表--错误的建筑ID"""
-
-#         api = '/building/model/list'
-#         data = {
-#             "building_id": "112233"
-#         }
-#         res = run_method.post(api, data, headers=corp_header)
-#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-#         self.assertEqual(res.json()["total"], "0", run_method.errInfo(res))
-
-#     def test03_building_model_list_sorted(self):
-#         """case03:特定建筑模型列表--按类型顺序排序"""
-
-#         api = '/building/model/list'
-#         for model_type in Building.modeltype_list:
-#             pub_param.building_model_upload(
-#                 self.building_id, corp_header, model_type)
-#             time.sleep(1)
-#         data = {
-#             "building_id": self.building_id
-#         }
-#         res = run_method.post(api, data, headers=corp_header)
-#         mt_sorted = Building.modelType_sorted()  # 已排好序的model_type
-#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-#         self.assertNotEqual(res.json()["total"], '0', run_method.errInfo(res))
-#         opera_assert.is_equal_sorted(
-#             mt_sorted, res.json()["data_list"], "model_type")
-
-#     def test04_building_model_list_success(self):
-#         """case04:特定建筑模型列表--查询成功"""
-
-#         api = '/building/model/list'
-#         files = ["TPY-ZL-A-7F.objr", "TPY-ZL-A-8F.objr", "TPY-ZL-A-9F.objr"]
-#         for up_file in files:
-#             pub_param.building_model_upload(
-#                 self.building_id, header=corp_header, filename=up_file)
-#             time.sleep(1)
-#         data = {
-#             "building_id": self.building_id
-#         }
-#         res = run_method.post(api, data, headers=corp_header)
-#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-#         # test03、test04上传了6个文件
-#         self.assertEqual(res.json()["total"], '6', run_method.errInfo(res))
-#         opera_assert.is_list_in(self.building_id, res.json()[
-#                                 "data_list"], "building_id")
-
-
+@unittest.skip("issue=#45")
 class TestModelEntityget(unittest.TestCase):
 
     def setUp(self):
@@ -602,51 +534,97 @@ class TestModelListv2(unittest.TestCase):
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res)) # zone 有3个楼层,每层一个模型
 
-    # def test05_model_listv2_zoneBuildId(self):
-    #     """case05:模型列表[RCM]--同时传园区建筑ID"""
+    def test05_model_listv2_zoneBuildId(self):
+        """case05:模型列表[RCM]--同时传园区建筑ID"""
 
-    #     self.data.update({
-    #         "zone_id":self.zone_id,
-    #         "building_id":self.building_two
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(len(res.json()["data_list"]), 2, run_method.errInfo(res)) # building_two 有2个楼层，每层一个模型
-    #     opera_assert.is_list_in(self.building_two,res.json()["data_list"],"building_id")
+        self.data.update({
+            "zone_id":self.zone_id,
+            "building_id":self.building_two
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
-    # def test06_model_listv2_zoneLayerId(self):
-    #     """case06:模型列表[RCM]--同时传园区楼层ID"""
+    def test06_model_listv2_zoneLayerId(self):
+        """case06:模型列表[RCM]--同时传园区楼层ID"""
 
-    #     self.data.update({
-    #         "zone_id":self.zone_id,
-    #         "layer_id":self.layer_one
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(len(res.json()["data_list"]), 1, run_method.errInfo(res)) 
-    #     self.assertEqual(res.json()["data_list"][0]["layer_id"], self.layer_one, run_method.errInfo(res))        
+        self.data.update({
+            "zone_id":self.zone_id,
+            "layer_id":self.layer_one
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))   
 
-    # def test07_model_listv2_buildLayerId(self):
-    #     """case07:模型列表[RCM]--同时传建筑楼层ID"""
+    def test07_model_listv2_buildLayerId(self):
+        """case07:模型列表[RCM]--同时传建筑楼层ID"""
 
-    #     self.data.update({
-    #         "building_id":self.building_one,
-    #         "layer_id":self.layer_one
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(len(res.json()["data_list"]), 1, run_method.errInfo(res)) 
-    #     self.assertEqual(res.json()["data_list"][0]["layer_id"], self.layer_one, run_method.errInfo(res))  
+        self.data.update({
+            "building_id":self.building_one,
+            "layer_id":self.layer_one
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
-    # def test08_model_listv2_zoneBuildLayerId(self):
-    #     """case08:模型列表[RCM]--同时传园区建筑楼层ID"""
+    def test08_model_listv2_zoneBuildLayerId(self):
+        """case08:模型列表[RCM]--同时传园区建筑楼层ID"""
 
-    #     self.data.update({
-    #         "zone_id":self.zone_id,
-    #         "building_id":self.building_one,
-    #         "layer_id":self.layer_one
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(len(res.json()["data_list"]), 1, run_method.errInfo(res)) 
-    #     self.assertEqual(res.json()["data_list"][0]["layer_id"], self.layer_one, run_method.errInfo(res)) 
+        self.data.update({
+            "zone_id":self.zone_id,
+            "building_id":self.building_one,
+            "layer_id":self.layer_one
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+
+class TestModelBuildingget(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        model_resp,cls.building_id = pub_param.building_model_upload(header=corp_header)
+        cls.model_id = model_resp["model_id"]
+
+    def setUp(self):
+        self.api = '/model/buildingget'
+        self.data = {
+            "id": self.model_id
+        }
+
+    def test01_model_buildingget_noId(self):
+        """case01:建筑详细信息[RCM]--无模型ID"""
+
+        self.data.update(id=None)
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+    
+    def test02_model_buildingget_rsm(self):
+        """case02:建筑详细信息[RSM]--查询成功"""
+
+        res = run_method.post(self.api,self.data,headers=super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], self.building_id, run_method.errInfo(res))
+
+    def test03_model_buildingget_rcm(self):
+        """case03:建筑详细信息[RCM]--查询成功"""
+
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], self.building_id, run_method.errInfo(res))
+    
+    def test04_model_buildingget_commUser(self):
+        """case04:建筑详细信息[普通用户]--查询受限"""
+
+        res = run_method.post(self.api,self.data,headers=common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["id"], self.building_id, run_method.errInfo(res))
+
+    def test05_model_buildingget_otherCorp(self):
+        """case05:建筑详细信息[普通用户]--查询受限"""
+
+        res = run_method.post(self.api,self.data,headers=other_corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))

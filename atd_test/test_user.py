@@ -25,10 +25,8 @@ pub_param = PublicParam()
 opera_json = OperetionJson()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
-# 普通用户
-common_user_header = pub_param.common_user(corp_id)
-# 其他组织RCM
-other_corp_header = pub_param.common_user(role=524288)
+common_user_header = pub_param.get_common_user()
+other_corp_header = pub_param.get_otherCorp_user()
 
 
 class TestUserCreate(unittest.TestCase, User):

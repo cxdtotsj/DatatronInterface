@@ -30,15 +30,18 @@ class TestProxyCreate(unittest.TestCase):
         api = '/proxy/create'
         data = {
             "URL":"https://www.baidu.com",
-            "content_type": 0,
-            "method": 0,
             "name": "auto_test"
         }
         res = run_method.post(api,json=data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         # 存入ID，后面做数据清除
         opera_json.check_json_value("test01_proxy_create",res.json()["id"])
-
+        
+    @classmethod
+    def tearDownClass(cls):
+        mid = opera_json.get_data("test01_proxy_create")
+        sql = '''delete from proxy where id = {};'''.format(mid)
+        opera_db.delete_data(sql)
 
 class TestProxyList(unittest.TestCase):
 
@@ -53,32 +56,26 @@ class TestProxyList(unittest.TestCase):
         self.assertEqual(res.json()["total"], str(num), run_method.errInfo(res))
 
 
-class TestProxyQuery(unittest.TestCase):
+# class TestProxyQuery(unittest.TestCase):
 
-    def test01_proxy_query_noId(self):
-        """case01:方法列表--获取方法列表"""
+#     def test01_proxy_query_noId(self):
+#         """case01:方法列表--获取方法列表"""
         
-        api = '/proxy/query'
-        mid = opera_json.get_data("test01_proxy_create")
-        data = {
-            "id":mid
-        }
-        res = run_method.post(api,json=data)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         api = '/proxy/query'
+#         mid = opera_json.get_data("test01_proxy_create")
+#         data = {
+#             "id":mid
+#         }
+#         res = run_method.post(api,json=data)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
     
-    def test02_proxy_query_mock(self):
-        """case01:方法列表--获取方法列表"""
+#     def test02_proxy_query_mock(self):
+#         """case01:方法列表--获取方法列表"""
 
-        api = 'https://dt-dev.arctron.cn/api/proxy/query?debug=1&mock=true'
-        data = {
-            "id":"120620004952519178"
-        }
-        res = requests.post(api,json=data)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(res.json()[0]["aims"],595,run_method.errInfo(res))
-        
-    @classmethod
-    def tearDownClass(cls):
-        mid = opera_json.get_data("test01_proxy_create")
-        sql = '''delete from proxy where id = {};'''.format(mid)
-        opera_db.delete_data(sql)
+#         api = 'https://dt-dev.arctron.cn/api/proxy/query?debug=1&mock=true'
+#         data = {
+#             "id":"120620004952519178"
+#         }
+#         res = requests.get(api,json=data)
+#         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+#         self.assertEqual(res.json()[0]["aims"],595,run_method.errInfo(res))

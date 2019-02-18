@@ -82,6 +82,19 @@ class PublicParam:
         corp_token, corp_id = self.get_corp_token()
         return {"Authorization": corp_token,"id-prefix":"ci"}, corp_id
 
+    # 公司普通用户
+    def get_common_user(self):
+        """普通用户 Auth Header"""
+
+        common_auth = self.user_login("12345678",email="common.user@xdchen.com")
+        return common_auth
+
+    # 其他组织管理员
+    def get_otherCorp_user(self):
+        """其他组织管理员 Auth Header"""
+        ohterCorp_auth = self.user_login("12345678",email="othercorp@xdchen.com")
+        return ohterCorp_auth
+
     # 获取错误码
     def get_code(self, res):
         res_dict = res.json()
@@ -587,7 +600,7 @@ class PublicParam:
     def get_guid(self,meta_url):
         """输入 meta_url,返回 guid"""
         for _ in range(6):
-            r = requests.get(meta_url)
+            r = requests.get(meta_url,headers={"Connection":"close"})
             if r.status_code == 200:
                 break
             else:
@@ -637,7 +650,7 @@ class PublicParam:
             else:
                 break
         try:
-            entities = requests.get(meta_url).json()["Entities"]
+            entities = requests.get(meta_url,headers={"Connection":"close"}).json()["Entities"]
         except ValueError:
             entities = None
         return entities
@@ -834,7 +847,7 @@ class PublicParam:
         
     
     # 创建场景
-    def create_scene(self,data=None,header=None):
+    def create_scene(self,data=None,header=None,parent_id=None):
         """return scene_id"""
 
         api = '/scene/create'
@@ -843,7 +856,8 @@ class PublicParam:
         else:
             scene_name = self.random_name("随机场景名称")
             data = {
-                "name":scene_name
+                "name":scene_name,
+                "parent_id": parent_id
                 }
         if header is not None:
             user_header = header
@@ -858,7 +872,7 @@ class PublicParam:
             print(self.run_method.errInfo(res))
     
     # 获取场景
-    def get_scene(self,scene_id):
+    def get_scene(self,scene_id,header):
         """return scene_json"""
 
         api = '/scene/get'
@@ -866,7 +880,7 @@ class PublicParam:
             "id":scene_id
         }
         try:
-            res = self.run_method.post(api,data)
+            res = self.run_method.post(api,data,headers=header)
             res.raise_for_status()
             return res.json()
         except:
@@ -936,13 +950,13 @@ class PublicParam:
         layer_to = self.create_building_layer(building_two,header) # building_two 第一层
         return (zone_id,building_one,building_two,layer_oo,layer_ot,layer_to)
 
-    def create_deviceAdd(self,level,class_id,layer_id,header):
+    def create_deviceAdd(self,level,class_ids,layer_id,header):
         
         api = '/layer/device/add'
         device_id = self.create_device(header=header)
         data = {
             "level": level,
-            "class_id": class_id,
+            "class_id": class_ids,
             "layer_id": layer_id,
             "things_id": device_id,
             "type": "extra",
@@ -957,6 +971,7 @@ class PublicParam:
         try:
             res = self.run_method.post(api, json=data, headers=header)
             res.raise_for_status()
+            return res.json()["id"]
         except:
             print("绑定设备失败")
             print(self.run_method.errInfo(res))
@@ -971,85 +986,50 @@ class PublicParam:
         # 构造 2个 数据模式 
         cid_one = self.create_layer_class(header=header) # 数据模式 class_one
         cid_two = self.create_layer_class(header=header) # 数据模式 class_two
+        cids = [cid_one,cid_two]
 
-        # 构造 level1 ，class_one 的数据、分 building_one、building_two
+        # 构造 level1 ，class_one,class_two 的数据、分 building_one、building_two
         layer_oo = device_info[3] # 建筑1，楼层 1
         for _ in range(2):
-            self.create_deviceAdd(1,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
+            self.create_deviceAdd(1,cids,layer_oo,header) # 绑定 layer_oo 的两个设备
         layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(1,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
+        self.create_deviceAdd(1,cids,layer_ot,header) # 绑定 layer_ot 的1个设备
         layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(1,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
-        
-        # 构造 level1 ，class_two 的数据、分 building_one、building_two
+        self.create_deviceAdd(1,cids,layer_to,header) # 绑定 layer_to 的1个设备
+
+        # 构造 level2 ，class_one,class_two 的数据、分 building_one、building_two
         layer_oo = device_info[3] # 建筑1，楼层 1
         for _ in range(2):
-            self.create_deviceAdd(1,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
+            self.create_deviceAdd(2,cids,layer_oo,header) # 绑定 layer_oo 的两个设备
         layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(1,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
+        self.create_deviceAdd(2,cids,layer_ot,header) # 绑定 layer_ot 的1个设备
         layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(1,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
+        self.create_deviceAdd(2,cids,layer_to,header) # 绑定 layer_to 的1个设备
 
-        # 构造 level2 ，class_one 的数据、分 building_one、building_two
+        # 构造 level4 ，class_one,class_two 的数据、分 building_one、building_two
         layer_oo = device_info[3] # 建筑1，楼层 1
         for _ in range(2):
-            self.create_deviceAdd(2,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
+            self.create_deviceAdd(4,cids,layer_oo,header) # 绑定 layer_oo 的两个设备
         layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(2,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
+        self.create_deviceAdd(4,cids,layer_ot,header) # 绑定 layer_ot 的1个设备
         layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(2,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
+        self.create_deviceAdd(4,cids,layer_to,header) # 绑定 layer_to 的1个设备
 
-        # 构造 level2 ，class_two 的数据、分 building_one、building_two
+        # 增加 level 7，class_one,class_two 的数据、分 building_one、building_two
         layer_oo = device_info[3] # 建筑1，楼层 1
-        for _ in range(2):
-            self.create_deviceAdd(2,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
+        self.create_deviceAdd(7,cids,layer_oo,header) # 绑定 layer_oo 的两个设备
         layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(2,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
+        self.create_deviceAdd(7,cids,layer_ot,header) # 绑定 layer_ot 的1个设备
         layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(2,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
-
-        # 构造 level4 ，class_one 的数据、分 building_one、building_two
-        layer_oo = device_info[3] # 建筑1，楼层 1
-        for _ in range(2):
-            self.create_deviceAdd(4,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
-        layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(4,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
-        layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(4,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
-
-        # 构造 level4 ，class_two 的数据、分 building_one、building_two
-        layer_oo = device_info[3] # 建筑1，楼层 1
-        for _ in range(2):
-            self.create_deviceAdd(4,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
-        layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(4,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
-        layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(4,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
-
-        # 增加 level 7，class_one 的数据、分 building_one、building_two
-        layer_oo = device_info[3] # 建筑1，楼层 1
-        self.create_deviceAdd(7,cid_one,layer_oo,header) # 绑定 layer_oo 的两个设备
-        layer_ot = device_info[4] # 建筑1，楼层 2
-        self.create_deviceAdd(7,cid_one,layer_ot,header) # 绑定 layer_ot 的1个设备
-        layer_to = device_info[5] # 建筑2，楼层 1
-        self.create_deviceAdd(7,cid_one,layer_to,header) # 绑定 layer_to 的1个设备
-
-        # # 增加 level 7，class_two 的数据、分 building_one、building_two
-        # layer_oo = device_info[3] # 建筑1，楼层 1
-        # self.create_deviceAdd(7,cid_two,layer_oo,header) # 绑定 layer_oo 的两个设备
-        # layer_ot = device_info[4] # 建筑1，楼层 2
-        # self.create_deviceAdd(7,cid_two,layer_ot,header) # 绑定 layer_ot 的1个设备
-        # layer_to = device_info[5] # 建筑2，楼层 1
-        # self.create_deviceAdd(7,cid_two,layer_to,header) # 绑定 layer_to 的1个设备
+        self.create_deviceAdd(7,cids,layer_to,header) # 绑定 layer_to 的1个设备
 
         return device_info,cid_one,cid_two
 
 if __name__ == "__main__":
     import time
     bd = PublicParam()
-    header = bd.get_corp_user()[0]
-    a = bd.front_deviceList(header)
-    print(a)
+    other_corp_header = bd.get_otherCorp_user()
+    print(other_corp_header)
 
 
 

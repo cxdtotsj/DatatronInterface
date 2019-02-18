@@ -33,10 +33,8 @@ opera_assert = OperationAssert()
 opera_db = OperationDB()
 super_header = pub_param.get_super_header()
 corp_header, corp_id = pub_param.get_corp_user()
-# 普通用户
-common_user_header = pub_param.common_user(corp_id)
-# 其他组织RCM
-other_corp_header = pub_param.common_user(role=524288)
+common_user_header = pub_param.get_common_user()
+other_corp_header = pub_param.get_otherCorp_user()
 
 
 class TestLayerCreate(unittest.TestCase):
@@ -75,10 +73,6 @@ class TestLayerCreate(unittest.TestCase):
 
         res = run_method.post(self.api,json=self.data,headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        # 查找数据库，zone_id 是否为空
-        sql = '''select zone_id from building_layer where id = '{}';'''.format(res.json()["id"])
-        result = opera_db.get_fetchone(sql)
-        self.assertEqual(result["zone_id"],'',"{}{}".format(result,run_method.errInfo(res)))
 
     def test04_layer_create_zoneBuilding(self):
         """case04:创建建筑层[RCM]--园区建筑新增楼层(数据库zone_id字段不为空)"""
@@ -86,10 +80,6 @@ class TestLayerCreate(unittest.TestCase):
         self.data.update(building_id=self.z_building)
         res = run_method.post(self.api,json=self.data,headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        # 查找数据库，zone_id 是否为空
-        sql = '''select zone_id from building_layer where id = '{}';'''.format(res.json()["id"])
-        result = opera_db.get_fetchone(sql)
-        self.assertEqual(result["zone_id"],self.zone_id,"{}{}".format(result,run_method.errInfo(res)))
 
     def test05_layer_create_multLayer(self):
         """case05:创建建筑层[RCM]--新增多个楼层"""
@@ -178,56 +168,51 @@ class TestLayerList(unittest.TestCase):
         res = run_method.post(self.api,self.data,headers=corp_header)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(res.json()["total"], '3', run_method.errInfo(res)) # zone 有3个楼层
-        opera_assert.is_list_in(self.zone_id,res.json()["data_list"],"zone_id")
 
-    # def test05_layer_list_zoneBuildId(self):
-    #     """case05:获取层列表[RCM]--同时传园区建筑ID"""
+    def test05_layer_list_zoneBuildId(self):
+        """case05:获取层列表[RCM]--同时传园区建筑ID"""
 
-    #     self.data.update({
-    #         "zone_id":self.zone_id,
-    #         "building_id":self.building_two
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(res.json()["total"], '2', run_method.errInfo(res)) # building_two 有2个楼层
-    #     opera_assert.is_list_in(self.building_two,res.json()["data_list"],"building_id")
+        self.data.update({
+            "zone_id":self.zone_id,
+            "building_id":self.building_two
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
-    # def test06_layer_list_zoneLayerId(self):
-    #     """case06:获取层列表[RCM]--同时传园区楼层ID"""
+    def test06_layer_list_zoneLayerId(self):
+        """case06:获取层列表[RCM]--同时传园区楼层ID"""
 
-    #     self.data.update({
-    #         "zone_id":self.zone_id,
-    #         "layer_id":self.layer_one
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(res.json()["total"], '1', run_method.errInfo(res)) 
-    #     self.assertEqual(res.json()["data_list"][0]["id"], self.layer_one, run_method.errInfo(res))        
+        self.data.update({
+            "zone_id":self.zone_id,
+            "layer_id":self.layer_one
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))  
 
-    # def test07_layer_list_buildLayerId(self):
-    #     """case07:获取层列表[RCM]--同时传建筑楼层ID"""
+    def test07_layer_list_buildLayerId(self):
+        """case07:获取层列表[RCM]--同时传建筑楼层ID"""
 
-    #     self.data.update({
-    #         "building_id":self.building_one,
-    #         "layer_id":self.layer_one
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(res.json()["total"], '1', run_method.errInfo(res)) 
-    #     self.assertEqual(res.json()["data_list"][0]["id"], self.layer_one, run_method.errInfo(res))  
+        self.data.update({
+            "building_id":self.building_one,
+            "layer_id":self.layer_one
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
-    # def test08_layer_list_zoneBuildLayerId(self):
-    #     """case08:获取层列表[RCM]--同时传园区建筑楼层ID"""
+    def test08_layer_list_zoneBuildLayerId(self):
+        """case08:获取层列表[RCM]--同时传园区建筑楼层ID"""
 
-    #     self.data.update({
-    #         "zone_id":self.zone_id,
-    #         "building_id":self.building_one,
-    #         "layer_id":self.layer_one
-    #     })
-    #     res = run_method.post(self.api,self.data,headers=corp_header)
-    #     self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-    #     self.assertEqual(res.json()["total"], '1', run_method.errInfo(res)) 
-    #     self.assertEqual(res.json()["data_list"][0]["id"], self.layer_one, run_method.errInfo(res))
+        self.data.update({
+            "zone_id":self.zone_id,
+            "building_id":self.building_one,
+            "layer_id":self.layer_one
+        })
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
 
 
 class TestLayerDeviceAdd(unittest.TestCase):
@@ -239,10 +224,11 @@ class TestLayerDeviceAdd(unittest.TestCase):
         cls.guidList,__ = pub_param.get_guidList(
             building_id, corp_header, "LangChaV2.objr")[:20]
         cls.layer_id = pub_param.create_building_layer(building_id,corp_header)
-        cls.class_id = pub_param.create_layer_class(header=corp_header)
-        # use to class devicelist
-        opera_json.check_json_value(
-            "deviceadd", {"layer_id": cls.layer_id})
+        class_id = pub_param.create_layer_class(header=corp_header)
+        cls.class_ids = [class_id]
+        # # use to class devicelist
+        # opera_json.check_json_value(
+        #     "deviceadd", {"layer_id": cls.layer_id})
         
     def test00_layer_device_add_noLevel(self):
         """case00:添加关联设备[RCM]--无可视等级"""
@@ -252,7 +238,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "layer_id": self.layer_id,
             "things_id": device_id,
             "level": None,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": "https://www.baidu.com",
             "coord": {
@@ -275,7 +261,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[0],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim"
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
@@ -290,7 +276,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[1],
             "things_id": None,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim"
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
@@ -306,7 +292,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[2],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": None
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
@@ -322,7 +308,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": None,
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim",
             "url": None
         }
@@ -339,7 +325,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[3],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim",
             "url": None
         }
@@ -360,7 +346,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": None,
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim",
             "url": "https://www.baidu.com"
         }
@@ -377,7 +363,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[4],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim",
             "url": "https://www.baidu.com"
         }
@@ -398,7 +384,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": None,
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": None,
             "coord": None
@@ -416,7 +402,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[5],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": None,
             "coord": None
@@ -433,7 +419,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "layer_id": self.layer_id,
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": "https://www.baidu.com",
             "coord": None
@@ -450,7 +436,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "layer_id": self.layer_id,
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": None,
             "coord": {
@@ -472,7 +458,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "layer_id": self.layer_id,
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": "https://www.baidu.com",
             "coord": {
@@ -491,17 +477,39 @@ class TestLayerDeviceAdd(unittest.TestCase):
         self.assertIsNotNone(device_data, run_method.errInfo(res))
         opera_json.check_json_value("test12_layer_device_add",device_id)
 
-    # 依赖用例 test12_layer_device_add
-    def test13_layer_device_add_diffClassId(self):
-        """case13:添加关联设备[RCM]--类型为extra，有url,有coord"""
+    # 依赖用例 test12_layer_device_add_UC
+    def test13_layer_device_add_repeatDeviceId(self):
 
-        class_id = pub_param.create_layer_class(header=corp_header)
         device_id = opera_json.get_data("test12_layer_device_add")
         data = {
             "layer_id": self.layer_id,
             "things_id": device_id,
             "level": 7,
-            "class_id": class_id,
+            "class_id": self.class_ids,
+            "type": "extra",
+            "url": "https://www.baidu.com",
+            "coord": {
+                "altitude": 122,
+                "latitude": 32,
+                "longitude": 0,
+                "angle": 0
+            }
+        }
+        res = run_method.post(self.api, json=data, headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+
+    def test13_layer_device_add_multClassId(self):
+        """case13:添加关联设备[RCM]--类型为extra，多个数据模式"""
+        
+        device_id = pub_param.create_device(header=corp_header)
+        cid_two = pub_param.create_layer_class(header=corp_header)
+        self.class_ids.append(cid_two)
+        data = {
+            "layer_id": self.layer_id,
+            "things_id": device_id,
+            "level": 7,
+            "class_id": self.class_ids,
             "type": "extra",
             "url": "https://www.baidu.com",
             "coord": {
@@ -528,7 +536,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[6],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim"
         }
         res = run_method.post(self.api, json=data, headers=super_header)
@@ -544,7 +552,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[7],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim"
         }
         res = run_method.post(self.api, json=data, headers=common_user_header)
@@ -560,7 +568,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[8],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim"
         }
         res = run_method.post(self.api, json=data, headers=other_corp_header)
@@ -576,7 +584,7 @@ class TestLayerDeviceAdd(unittest.TestCase):
             "guid": self.guidList[9],
             "things_id": device_id,
             "level": 7,
-            "class_id": self.class_id,
+            "class_id": self.class_ids,
             "type": "bim"
         }
         res = run_method.post(self.api, json=data)
@@ -602,8 +610,12 @@ class TestLayerDeviceAdd(unittest.TestCase):
             }
         }
         res = run_method.post(self.api, json=data, headers=corp_header)
-        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
-        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        sql = '''select * from building_layer_things where id = '{}';'''.format(res.json()[
+                                                                                "id"])
+        device_data = opera_db.get_fetchone(sql)
+        self.assertIsNotNone(res.json()["id"], run_method.errInfo(res))
+        self.assertIsNotNone(device_data, run_method.errInfo(res))
 
 
 class TestLayerDeviceList(unittest.TestCase):
@@ -622,45 +634,41 @@ class TestLayerDeviceList(unittest.TestCase):
         # cls.bid_one = 'ci-121914593709667345'
         # cls.layer_oo = 'ci-121914595756487697'
 
+        # depend to scene
+        opera_json.check_json_value("LayerDeviceList",{
+            "zone_id":cls.zone_id,
+            "building_id":cls.bid_one,
+            "layer_id":cls.layer_oo
+        })
 
     def setUp(self):
         self.api = '/layer/device/list'
         self.data = {
-            "level": 1,
-            "class_id": self.cid_one,
             "zone_id": None,
             "building_id": None,
             "layer_id": None
         }
 
-    def test01_layer_device_list_noLevel(self):
-        """case01:获取所有设备列表--无可视等级"""
+    def test01_layer_device_list_noClassId(self):
+        """case01:获取所有设备列表--无数据模式"""
 
-        self.data.update(level=None)
         res = run_method.post(self.api,self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(len(res.json()["data_list"]), 0, run_method.errInfo(res))
 
-    def test02_layer_device_list_noClassId(self):
-        """case02:获取所有设备列表--无数据模式"""
-
-        self.data.update(class_id=None)
-        res = run_method.post(self.api,self.data)
-        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(len(res.json()["data_list"]), 0, run_method.errInfo(res))
-
-    def test03_layer_device_list_zoneL1C1(self):
-        """case03:获取所有设备列表--zone、level1、class1"""
+    def test02_layer_device_list_zoneC1(self):
+        """case02:获取所有设备列表--zone、class1"""
 
         self.data.update({
+            "class_id": self.cid_one,
             "zone_id": self.zone_id
         })
         res = run_method.post(self.api,self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(len(res.json()["data_list"]), 7, run_method.errInfo(res))
 
-    def test04_layer_device_list_zoneL1C2(self):
-        """case04:获取所有设备列表--zone、level1、class2"""
+    def test03_layer_device_list_zoneC2(self):
+        """case03:获取所有设备列表--zone、class2"""
 
         self.data.update({
             "class_id": self.cid_two,
@@ -670,48 +678,76 @@ class TestLayerDeviceList(unittest.TestCase):
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(len(res.json()["data_list"]), 7, run_method.errInfo(res))
 
-    def test05_layer_device_list_buildingL2C1(self):
-        """case05:获取所有设备列表--building、level2、class1"""
+    def test04_layer_device_list_buildingC1(self):
+        """case04:获取所有设备列表--building、class1"""
 
         self.data.update({
-            "level": 2,
+            "class_id": self.cid_one,
             "building_id": self.bid_one
         })
         res = run_method.post(self.api,self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(len(res.json()["data_list"]), 5, run_method.errInfo(res))
 
-    def test06_layer_device_list_buildingL2C2(self):
-        """case06:获取所有设备列表--building、level2、class2"""
+    def test05_layer_device_list_buildingC2(self):
+        """case05:获取所有设备列表--building、class2"""
 
         self.data.update({
-            "level": 2,
             "class_id": self.cid_two,
             "building_id": self.bid_one
         })
         res = run_method.post(self.api,self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 5, run_method.errInfo(res))
 
-    def test07_layer_device_list_layerL3C1(self):
-        """case07:获取所有设备列表--layer、level4、class1"""
+    def test06_layer_device_list_layerC1(self):
+        """case06:获取所有设备列表--layer、class1"""
 
         self.data.update({
-            "level": 4,
+            "class_id": self.cid_one,
             "layer_id": self.layer_oo
         })
         res = run_method.post(self.api,self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
         self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))
 
-    def test08_layer_device_list_layerL3C2(self):
-        """case08:获取所有设备列表--layer、level4、class2"""
+    def test07_layer_device_list_layerC2(self):
+        """case07:获取所有设备列表--layer、class2"""
 
         self.data.update({
-            "level": 4,
             "class_id": self.cid_two,
             "layer_id": self.layer_oo
         })
         res = run_method.post(self.api,self.data)
         self.assertEqual(res.status_code, 200, run_method.errInfo(res))
-        self.assertEqual(len(res.json()["data_list"]), 2, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))
+
+    def test08_layer_device_list_zone(self):
+        """case08:获取所有设备列表--zone,no class_id"""
+
+        self.data.update({
+            "zone_id": self.zone_id
+        })
+        res = run_method.post(self.api,self.data)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 7, run_method.errInfo(res))
+
+    def test09_layer_device_list_building(self):
+        """case09:获取所有设备列表--building,no class_id"""
+
+        self.data.update({
+            "building_id": self.bid_one
+        })
+        res = run_method.post(self.api,self.data)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 5, run_method.errInfo(res))
+
+    def test10_layer_device_list_layer(self):
+        """case10:获取所有设备列表--layer,no class_id"""
+
+        self.data.update({
+            "layer_id": self.layer_oo
+        })
+        res = run_method.post(self.api,self.data)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))

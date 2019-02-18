@@ -143,7 +143,6 @@ class SceneApiData:
 
 
 if __name__ == '__main__':
-    a = SceneApiData()
-    scene_list = [a.scene_name() for i in range(5)]
-    print(scene_list)
+    a = BuildingApiData()
+    print(a.file_Office)
     
