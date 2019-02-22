@@ -118,6 +118,11 @@ class BuildingApiData:
         modelType_list.insert(0,'T')
         return modelType_list
 
+    # building/attach 附件所需文件
+    attach01 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','attach-01.png')
+    attach02 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','attach-02.png')
+    attach03 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','attach-03.png')
+
 
 class ThingsApiData:
     

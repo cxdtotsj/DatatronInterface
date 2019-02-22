@@ -680,3 +680,386 @@ class TestBuildingDel(unittest.TestCase):
         self.assertEqual(res.status_code, 403, run_method.errInfo(res))
         self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
         self.assertNotEqual(new_data["status"], 3, "普通用户删除建筑成功")
+
+
+class TestBuildingAttachUpload(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.building_id = pub_param.create_building(header=corp_header)
+    
+    def setUp(self):
+        self.api = '/building/attach/upload'
+        self.data = {
+            "building_id": self.building_id
+        }
+
+    def test01_building_attach_upload_noBuildingId(self):
+        """case01:上传建筑附件[RCM]--无建筑ID"""
+
+        self.data.update(building_id=None)
+        with open(Building.attach01,'rb') as fileop:
+            files = {"file": fileop}
+            res = run_method.post(self.api,self.data,files=files,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+    def test02_building_attach_upload_noFile(self):
+        """case02:上传建筑附件[RCM]--无文件流"""
+
+        res = run_method.post(self.api, self.data, headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+
+    def test03_building_attach_upload_file(self):
+        """case03:上传建筑附件[RCM]--上传一个文件流"""
+
+        with open(Building.attach01,'rb') as fileop:
+            files = {"file": fileop}
+            res = run_method.post(self.api,self.data,files=files,headers=corp_header)
+            self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+            self.assertEqual(len(res.json()["ids"]), 1, run_method.errInfo(res))
+            sql = '''select name from building_attach where 
+                        id = '{}';'''.format(res.json()["ids"][0])
+            name = opera_db.get_fetchone(sql)["name"]
+            self.assertEqual(name, "attach-01.png", run_method.errInfo(res))
+
+    def test04_building_attach_upload_files(self):
+        """case04:上传建筑附件[RCM]--上传多个文件流"""
+
+        with open(Building.attach01,'rb') as fileop1, open(Building.attach02,'rb') as fileop2, open(Building.attach03,'rb') as fileop3:
+            files = [
+                ("file",(fileop1)),
+                ("file",(fileop2)),
+                ("file",(fileop3))
+            ]
+            res = run_method.post(self.api,self.data,files=files,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["ids"]), 3, run_method.errInfo(res))
+
+    def test05_building_attach_upload_rsm(self):
+        """case05:上传建筑附件[RSM]--权限受限"""
+
+        with open(Building.attach01,'rb') as fileop:
+            files = {"file": fileop}
+            res = run_method.post(self.api,self.data,files=files,headers=super_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test06_building_attach_upload_noRole(self):
+        """case06:上传建筑附件[普通用户]--权限受限"""
+
+        with open(Building.attach01,'rb') as fileop:
+            files = {"file": fileop}
+            res = run_method.post(self.api,self.data,files=files,headers=common_user_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test07_building_attach_upload_otherCorp(self):
+        """case07:上传建筑附件[其他组织RCM]--权限受限"""
+
+        with open(Building.attach01,'rb') as fileop:
+            files = {"file": fileop}
+            res = run_method.post(self.api,self.data,files=files,headers=other_corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+        
+
+class TestBuildingAttachList(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.building_id = pub_param.create_building(header=corp_header)
+        cls.ids = pub_param.building_attach_upload(cls.building_id,corp_header)
+    
+    def setUp(self):
+        self.api = '/building/attach/list'
+        self.data = {
+            "page": 1,
+            "limit": 50,
+            "building_id": None
+        }
+
+    def test01_building_attach_list_noBuildingId(self):
+        """case01:建筑附件列表[RCM]--无建筑ID"""
+
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        sql = '''select id from building_attach where 
+                corp_id = '{}' and status != 3;'''.format(corp_id)
+        attach_num = opera_db.get_effect_row(sql)
+        self.assertEqual(res.json()["total"], str(attach_num), run_method.errInfo(res))
+        
+    def test02_building_attach_list_buildingId(self):
+        """case02:建筑附件列表[RCM]--查询成功"""
+
+        self.data.update(building_id=self.building_id)
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))
+
+    def test03_building_attach_list_rsm(self):
+        """case03:建筑附件列表[RSM]--查询成功"""
+
+        self.data.update(building_id=self.building_id)
+        res = run_method.post(self.api,self.data,headers=super_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))
+
+    def test04_building_attach_list_generalUser(self):
+        """case04:建筑附件列表[普通用户]--查询成功"""
+
+        self.data.update(building_id=self.building_id)
+        res = run_method.post(self.api,self.data,headers=common_user_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(len(res.json()["data_list"]), 3, run_method.errInfo(res))
+
+class TestBuildingAttachUpdate(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # 获取一个附件id
+        building_id = pub_param.create_building(header=corp_header)
+        ids = pub_param.building_attach_upload(building_id,corp_header)
+        cls.aid = ids[0]
+    
+    def setUp(self):
+        self.api = '/building/attach/update'
+        self.data = {
+            "id": self.aid,
+            "name": "default.png"
+        }
+
+    @unittest.skip("issue=#55")
+    def test01_building_attach_update_noId(self):
+        """case01:建筑附件更新[RCM]--无ID"""
+
+        self.data.update(id=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+    def test02_building_attach_update_noName(self):
+        """case02:建筑附件更新[RCM]--无附件显示名称"""
+
+        self.data.update(name=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        self.assertEqual(res.json()["name"], "", run_method.errInfo(res))
+
+    def test03_building_attach_update_success(self):
+        """case03:建筑附件更新[RCM]--附件显示名称更新成功"""
+
+        self.data.update(name="update.png")
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        sql = '''select name from building_attach where id = '{}';'''.format(self.aid)
+        name = opera_db.get_fetchone(sql)["name"]
+        self.assertEqual(name, "update.png", run_method.errInfo(res))
+
+    def test04_building_attach_update_rsm(self):
+        """case04:建筑附件更新[RSM]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=super_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test05_building_attach_update_noRole(self):
+        """case05:建筑附件更新[普通用户]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=common_user_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    @unittest.skip("issue=#53")
+    def test06_building_attach_update_otherCorp(self):
+        """case06:建筑附件更新[其他组织RCM]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=other_corp_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+class TestBuildingAttachDownload(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # 获取一个附件id
+        cls.building_id = pub_param.create_building(header=corp_header)
+        ids = pub_param.building_attach_upload(cls.building_id,corp_header)
+        cls.aid = ids[0]
+    
+    def setUp(self):
+        self.api = '/building/attach/download'
+        self.data = {
+            "building_id": self.building_id,
+            "id": self.aid,
+            "name": "download.png"
+        }
+
+    def test01_building_attach_download_noId(self):
+        """case01:建筑附件下载[RCM]--无ID"""
+
+        self.data.update(id=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+
+    def test02_building_attach_download_noBuildingId(self):
+        """case02:建筑附件下载[RCM]--无建筑ID"""
+    
+        self.data.update(building_id=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+
+    def test03_building_attach_download_success(self):
+        """case03:建筑附件下载[RCM]--附件下载成功"""
+
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+
+    def test04_building_attach_download_rsm(self):
+        """case04:建筑附件下载[RSM]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=super_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test05_building_attach_download_noRole(self):
+        """case05:建筑附件下载[普通用户]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=common_user_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test06_building_attach_download_otherCorp(self):
+        """case06:建筑附件下载[其他组织RCM]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=other_corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+
+class TestBuildingAttachDel(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # 获取一个附件id
+        building_id = pub_param.create_building(header=corp_header)
+        cls.ids = pub_param.building_attach_upload(building_id,corp_header)
+    
+    def setUp(self):
+        self.api = '/building/attach/del'
+        self.data = {
+            "id": self.ids[0]
+        }
+
+    @unittest.skip("issue=#55")
+    def test01_building_attach_del_noId(self):
+        """case01:删除建筑附件[RCM]--无ID"""
+
+        self.data.update(id=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+    def test02_building_attach_del_success(self):
+        """case02:删除建筑附件[RCM]--删除成功(逻辑删除)"""
+
+        res = run_method.post(self.api,self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+        sql = '''select status from building_attach where id = '{}';'''.format(self.ids[0])
+        status = opera_db.get_fetchone(sql)["status"]
+        self.assertEqual(status, 3, run_method.errInfo(res))
+
+    def test03_building_attach_del_rsm(self):
+        """case03:删除建筑附件[RSM]--权限受限"""
+
+        self.data.update(id=self.ids[1])
+        res = run_method.post(self.api,self.data,headers=super_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+        
+    def test04_building_attach_del_noRole(self):
+        """case04:删除建筑附件[普通用户]--权限受限"""
+
+        self.data.update(id=self.ids[1])
+        res = run_method.post(self.api,self.data,headers=common_user_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    @unittest.skip("issue=#53")
+    def test05_building_attach_del_otherCorp(self):
+        """case05:删除建筑附件[其他组织RCM]--权限受限"""
+
+        self.data.update(id=self.ids[1])
+        res = run_method.post(self.api,self.data,headers=other_corp_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+
+class TestBuildingAttachMuldownload(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # 获取一个附件id
+        cls.building_id = pub_param.create_building(header=corp_header)
+        cls.ids = pub_param.building_attach_upload(cls.building_id,corp_header)
+    
+    def setUp(self):
+        self.api = '/building/attach/muldownload'
+        self.data = {
+            "building_id": self.building_id,
+            "attachs": [
+                {
+                    "id": self.ids[0],
+                    "name": "download1.png"
+                },
+                {
+                    "id": self.ids[1],
+                    "name": "download2.png"
+                }
+            ]
+        }
+
+    def test01_building_attach_muldownload_noId(self):
+        """case01:建筑附件下载[RCM]--无ID"""
+
+        self.data["attachs"][0].update(id=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))
+
+    def test02_building_attach_muldownload_noBuildingId(self):
+        """case02:建筑附件下载[RCM]--无建筑ID"""
+    
+        self.data.update(building_id=None)
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1400, run_method.errInfo(res))
+
+    def test03_building_attach_muldownload_success(self):
+        """case03:建筑附件下载[RCM]--附件下载成功"""
+
+        res = run_method.post(self.api,json=self.data,headers=corp_header)
+        self.assertEqual(res.status_code, 200, run_method.errInfo(res))
+
+    def test04_building_attach_muldownload_rsm(self):
+        """case04:建筑附件下载[RSM]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=super_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test05_building_attach_muldownload_noRole(self):
+        """case05:建筑附件下载[普通用户]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=common_user_header)
+        self.assertEqual(res.status_code, 403, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1403, run_method.errInfo(res))
+
+    def test06_building_attach_muldownload_otherCorp(self):
+        """case06:建筑附件下载[其他组织RCM]--权限受限"""
+
+        res = run_method.post(self.api,json=self.data,headers=other_corp_header)
+        self.assertEqual(res.status_code, 400, run_method.errInfo(res))
+        self.assertEqual(res.json()["code"], 1000, run_method.errInfo(res))

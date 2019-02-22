@@ -486,6 +486,31 @@ class PublicParam:
             print("获取建筑详细信息失败")
             print(self.run_method.errInfo(res))
     
+    # 上传建筑附件
+    def  building_attach_upload(self,building_id,header,num=None):
+        """上传建筑附件,return ids 列表"""
+
+        api = '/building/attach/upload'
+        data = {
+            "building_id": building_id
+        }
+        attach01 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','attach-01.png')
+        attach02 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','attach-02.png')
+        attach03 = os.path.join(os.path.dirname(os.path.dirname(__file__)),'dataconfig','attach-03.png')
+        try:
+            with open(attach01,'rb') as fileop1, open(attach02,'rb') as fileop2, open(attach03,'rb') as fileop3:
+                files = [
+                    ("file",("public-01.png",fileop1)),
+                    ("file",("public-01.png",fileop2)),
+                    ("file",("public-01.png",fileop3))
+                ]
+                res = self.run_method.post(api,data,files=files,headers=header)
+                res.raise_for_status()
+                return res.json()["ids"]
+        except:
+            print("创建building并上传模型失败")
+            print(self.run_method.errInfo(res))
+    
     # 新建楼层
     def create_building_layer(self,building_id,header):
         """return layer_id"""
