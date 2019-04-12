@@ -62,7 +62,10 @@ class BaseMethod:
         request_id: response对象中的request_id
         """
         if isinstance(res,object):
-            return "\033[31m {} \033[0m".format({"err":res.text,"request_id":res.headers["X-Request-Id"]})
+            try:
+                return "\033[31m {} \033[0m".format({"err":res.text,"request_id":res.headers["X-Request-Id"]})
+            except KeyError:
+                return "\033[31m {} \033[0m".format({"err":res.text, "request_id": "X-Request-Id 获取失败"})
     
     def assertInfo(self,message):
         """assert错误信息输出"""

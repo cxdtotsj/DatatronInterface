@@ -31,7 +31,7 @@ if "db_url" in os.environ:
         db_port = 3306
 else:
     db_host = "10.241.11.7"
-    db_port = 4000
+    db_port = 3306
 
 db_db = os.environ.get("db_db") or "datatron"
 
