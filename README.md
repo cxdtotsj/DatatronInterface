@@ -19,3 +19,6 @@
     3. 测试发现:
     
         `python -m unittest discover -v`
+    
+    4. 增加错误忽略
+        `python -W ignore -m unittest -v TestModule.TestClass.TestFunc`
