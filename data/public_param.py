@@ -107,12 +107,12 @@ class PublicParam:
  
     def stamp_random_CEM(self):
         """时间戳和随机数生成 corp_name、random_email、random_mobile"""
-        time.sleep(2)
+        # time.sleep(1)
         stamp = int(time.time())
-        rd5 = random.randint(0,10000)
+        rd8 = random.randint(0,10000000)
 
-        corp_name = "随机组织名称{}".format(stamp)
-        random_email = "erd{}_{}@random.com".format(stamp,rd5)
+        corp_name = "随机组织名称{}_{}".format(stamp,rd8)
+        random_email = "erd{}_{}@random.com".format(stamp,rd8)
         random_mobile = random.randint(10000000000, 99999999999)
 
         # 判断随机生成的 mobile 是否已存在
@@ -124,15 +124,15 @@ class PublicParam:
             sql_mobile = self.opera_db.get_fetchone(sql_p2)
 
         # 判断 email 是否重复
-        sql_e = '''select mobile from user where mobile = '{}';'''.format(random_mobile)
-        sql_email = self.opera_db.get_fetchone(sql_e)
-        while sql_email is not None:
-            time.sleep(1)
-            stamp1 = int(time.time())
-            rd6 = random.randint(0,100000)
-            random_mobile = "rm{}_{}@timestamp.com".format(stamp1,rd6)
-            sql_e2 = '''select mobile from user where email = '{}';'''.format(random_mobile)
-            sql_email = self.opera_db.get_fetchone(sql_e2)
+        # sql_e = '''select email from user where email = '{}';'''.format(random_email)
+        # sql_email = self.opera_db.get_fetchone(sql_e)
+        # while sql_email is not None:
+        #     time.sleep(1)
+        #     stamp1 = int(time.time())
+        #     rd6 = random.randint(0,100000)
+        #     random_mobile = "rm{}_{}@timestamp.com".format(stamp1,rd6)
+        #     sql_e2 = '''select mobile from user where email = '{}';'''.format(random_mobile)
+        #     sql_email = self.opera_db.get_fetchone(sql_e2)
             
         return corp_name,random_email,random_mobile
 
@@ -142,14 +142,14 @@ class PublicParam:
         num=int,return []
         """
 
-        time.sleep(1)
+        # time.sleep(1)
         stamp = int(time.time())
-        rd5 = random.randint(0,10000)
+        rd8 = random.randint(0,10000000)
 
         if num is None:
-            random_name = '{}{}_{}'.format(name,stamp,rd5)
+            random_name = '{}{}_{}'.format(name,stamp,rd8)
         else:
-            random_name = ['{}_{}{}_{}'.format(i,name,stamp,rd5) for i in range(num)]
+            random_name = ['{}_{}{}_{}'.format(i,name,stamp,rd8) for i in range(num)]
         return random_name
 
 

@@ -8,63 +8,118 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 from base.base_method import BaseMethod
-from util.operation_json import OperetionJson
-from data.public_param import PublicParam
+from util.operation_db import OperationDB
+from data.common import Common
+
 
 
 class InitTest:
     def __init__(self):
         self.run_method = BaseMethod()
-        self.opera_json = OperetionJson()
-        self.pub_param = PublicParam()
-        self.super_header = self.pub_param.get_super_header()
+        self.common = Common()
+        self.opera_db = OperationDB()
+        self.super_header = self.common.header_super()
+    
+    # 创建用户
+    def user_create(self,name,password,email=None,mobile=None):
+        """创建用户"""
+        api = '/user/create'
+        data = {
+            "email": email,
+            "mobile": mobile,
+            "name": name,
+            "password": password
+        }
+        try:
+            res = self.run_method.post(api,data, headers=self.super_header)
+            res.raise_for_status()
+            print("用户: {} 创建成功!".format(name))
+            return res.json()["id"]
+        except:
+            print("重置密码失败")
+            print(self.run_method.errInfo(res))
+    
+    # 修改密码
+    def user_passed_reset(self,password,newpasswd,email=None,mobile=None):
+        """修改密码"""
+        api = '/user/passwd/reset'
+        data = {
+            "email": email,
+            "mobile": mobile,
+            "password": password,
+            "newpasswd": newpasswd
+        }
+        try:
+            res = self.run_method.post(api, data)
+            res.raise_for_status()
+        except:
+            print("重置密码失败")
+            print(self.run_method.errInfo(res))
+    
+    # 创建组织
+    def corp_create(self,name):
+        """新增组织"""
+        api = '/corp/create'
+        data = {
+            "name": name
+        }
+        sql = '''select name from corp where name = '{}';'''.format(name)
+        corp_name = self.opera_db.get_fetchone(sql)
+        if corp_name is None:
+            try:
+                res = self.run_method.post(api, data, headers=self.super_header)
+                res.raise_for_status()
+                print("-------------------------------")
+                print("组织: {} 创建成功!".format(name))
+                return res.json()["id"]
+            except:
+                print("新增组织失败")
+                print(self.run_method.errInfo(res))
+    
+    # 用户添加到组织
+    def user_corp_add(self,user_id,corp_id,role):
+        """用户添加至组织"""
+        api = '/corp/user/add'
+        data = {
+            "user_id": user_id,
+            "corp_id": corp_id,
+            "role": role
+        }
+        try:
+            res = self.run_method.post(api, data, headers=self.super_header)
+            res.raise_for_status()
+            print("用户添加至组织成功")
+        except:
+            print("用户添加至组织失败")
+            print(self.run_method.errInfo(res))
+    
+    # init
+    def data_init(self):
 
-    # 创建公司、用户、并绑定用户到公司
-    def user_corp_add(self):
-        # 新增用户
-        createUser_api = '/user/create'
-        createUser_data = {"email":"test10@admin",
-                            "name":"测试管理员初始化勿删",
-                            "password":123456}
-        user_resopnse = self.run_method.post(createUser_api,createUser_data,headers=self.super_header)
-        if user_resopnse.status_code is not 200:
-            print("用户新增失败")
-            print(self.run_method.errInfo(user_resopnse))
-        user_id = user_resopnse.json()["id"]
-        self.opera_json.check_json_value("user_corp_add",{"user_id":user_id})
-
-        # 修改密码
-        userReset_api = '/user/passwd/reset'
-        userReset_data = {"email":"test10@admin",
-                            "password":123456,
-                            "newpasswd":12345678}
-        reset_response = self.run_method.post(userReset_api,userReset_data)
-        if reset_response.status_code is not 200:
-            print("新用户修改密码失败")
-            print(self.run_method.errInfo(reset_response))
-
-        # 新增公司
-        createCorp_api = '/corp/create'
-        createCorp_data = {"name":"测试公司初始化勿删13"}
-        corp_response = self.run_method.post(createCorp_api,createCorp_data,headers=self.super_header)
-        if corp_response.status_code is not 200:
-            print("公司新增失败")
-            print(self.run_method.errInfo(corp_response))
-        corp_id = corp_response.json()["id"]
-        self.opera_json.check_json_value("user_corp_add",{"user_id":user_id,"corp_id":corp_id})
-
-        # 将用户绑定到组
-        user_corp_api = '/corp/user/add'
-        user_corp_data = {"user_id":user_id,
-                            "corp_id":corp_id,
-                            "role":524288}
-        userCorp_response = self.run_method.post(user_corp_api,user_corp_data,headers=self.super_header)
-        if userCorp_response.status_code is not 200:
-            print("用户绑定到公司失败")
-            print(self.run_method.errInfo(userCorp_response))
+        corp = "测试公司初始化勿删2"
+        corp_id = self.corp_create(corp)
+        user_data = [
+            ("xdchenadmin@admin2", "测试管理员初始化勿删2", "123456", "12345678", 524288),
+            ("common.user@xdchen.com2", "普通用户账号--勿删2", "123456", "12345678", 0)
+        ]
+        for i in user_data:
+            email = i[0]
+            user_name = i[1]
+            password = i[2]
+            newpasswd = i[3]
+            role = i[4]
+            user_id = self.user_create(name=user_name, password=password, email= email)
+            self.user_passed_reset(password=password,newpasswd=newpasswd,email=email)
+            self.user_corp_add(user_id=user_id, corp_id=corp_id,role=role)
         
+        other_corp = "其他组织--勿删2"
+        other_corp_id = self.corp_create(other_corp)
+        other_user_id = self.user_create(name="其他组织用户--勿删2", password="123456", email= "othercorp@xdchen.com2")
+        self.user_passed_reset(password="123456",newpasswd="12345678",email="othercorp@xdchen.com2")
+        self.user_corp_add(user_id=other_user_id, corp_id=other_corp_id,role=524288)
 
 
 if __name__ == '__main__':
     init = InitTest()
-    init.user_corp_add()
+    init.data_init()
+    
